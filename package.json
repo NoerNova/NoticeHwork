@@ -1,0 +1,37 @@
+{
+  "name": "NoticeHwork",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "jest-expo": "^22.0.0",
+    "react-test-renderer": "16.0.0-beta.5"
+  },
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "test": "node node_modules/jest/bin/jest.js --watch"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "expo": "^22.0.0",
+    "firebase": "^4.6.0",
+    "firebase-functions": "^0.7.1",
+    "prop-types": "^15.6.0",
+    "react": "16.0.0-beta.5",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-21.0.0.tar.gz",
+    "react-native-calendars": "^1.8.1",
+    "react-native-elements": "^0.17.0",
+    "react-native-fcm": "^10.0.3",
+    "react-native-fetch-blob": "^0.10.8",
+    "react-native-image-picker": "^0.26.7",
+    "react-native-keyboard-aware-scroll-view": "^0.4.1",
+    "react-native-modal-datetime-picker": "^4.13.0",
+    "react-native-picker-android": "^1.0.3",
+    "react-native-prompt": "^1.0.0",
+    "react-native-router-flux": "^3.40.1",
+    "react-native-segmented-control-tab": "^3.2.1",
+    "react-native-simple-toast": "^0.0.7",
+    "react-native-swipeout": "^2.3.1"
+  }
+}

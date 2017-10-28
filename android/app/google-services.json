@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "383365177474",
+    "firebase_url": "https://noticehwork.firebaseio.com",
+    "project_id": "noticehwork",
+    "storage_bucket": "noticehwork.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383365177474:android:6eb421dc5b96219c",
+        "android_client_info": {
+          "package_name": "com.noernova.noticehwork"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "383365177474-1t1t1rhflqcuhsqs1oh72geapjt06mto.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDT4oKOVa4FcoWxaUTbrFeVpQzGIeCSOA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

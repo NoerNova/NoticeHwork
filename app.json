@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "sdkVersion": "21.0.0",
+    "name": "NoticeHwork",
+    "icon": "./src/img/logo2.png",
+    "slug": "noticehwork",
+    "version": "0.1.0",
+    "loading": {
+      "icon": "./src/img/logo2.png",
+      "hideExponentText": false
+    },
+    "ios": {
+      "bundleIdentifier": "com.noernova.noticehwork",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.601971055178-n9hjsbngjmoqboquarrjakgp1ii068ch"
+        }
+      },
+      "publishBundlePath": "ios/noticehwork/Supporting/shell-app.bundle",
+      "publishManifestPath": "ios/noticehwork/Supporting/shell-app-manifest.json"
+    },
+    "android": {
+      "package": "com.noernova.noticehwork",
+      "config": {
+        "googleSignIn": {
+          "apiKey": "AIzaSyBKK0tx0_MvSBh-CETKbNw_Ay12hDrDST0",
+          "certificateHash": "AD5F5BF5AB8FF22D1D0528CFB50F3ABC56842336"
+        }
+      }
+    },
+    "facebookScheme": "fb437725326585310",
+    "isDetached": true,
+    "detach": {
+      "scheme": "exp4ccf1695a8cd4915a8de3526c8e6e171",
+      "iosExpoViewUrl": "https://s3.amazonaws.com/exp-exponent-view-code/ios-v1.20.5-sdk21.0.0-11e2eb3f-807e-48d4-8685-b0694f874637.tar.gz",
+      "androidExpoViewUrl": "https://s3.amazonaws.com/exp-exponent-view-code/android-v1.20.0-sdk21.0.0-38791499-fe99-4600-950d-cf7e2e85cea9.tar.gz"
+    }
+  }
+}

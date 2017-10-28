@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>383365177474-o68edgd0ck0pglh73s9r8qbocnf0ptq6.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.383365177474-o68edgd0ck0pglh73s9r8qbocnf0ptq6</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCBpQZoCKR4lS_0ZO5E6lMyRWCcc1HHMnA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>383365177474</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.noernova.noticehwork</string>
+	<key>PROJECT_ID</key>
+	<string>noticehwork</string>
+	<key>STORAGE_BUCKET</key>
+	<string>noticehwork.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true></true>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<false></false>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:383365177474:ios:6eb421dc5b96219c</string>
+	<key>DATABASE_URL</key>
+	<string>https://noticehwork.firebaseio.com</string>
+</dict>
+</plist>
