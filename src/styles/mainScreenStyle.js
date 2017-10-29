@@ -273,6 +273,34 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: 'rgba(200,200,200,0.3)',
     padding: 5
+  },
+  noteDetail: {
+    padding: 10,
+    fontSize: 18,
+    fontWeight: 'bold'
+  },
+  noteDate: {
+    padding: 10,
+  },
+  noteWriter: {
+    padding: 10,
+    marginRight: 240,
+  },
+  noteViewDetail: {
+    fontSize: 18,
+    padding: 1
+  },
+  noteViewDate: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    padding: 1
+  },
+  noteViewModel: {
+    flex: 1,
+    width: null,
+    height: null,
+    backgroundColor: 'rgba(0,0,0,0.8)',
   }
 
 

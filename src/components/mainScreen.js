@@ -63,14 +63,16 @@ class MainScreen extends Component {
       courseNote: '',
       noteEdding: false,
       noteEddingDone: true,
-      noteDisplay: null,
-      noteDate: [],
-      noteDetail: [],
-      noteWriter: [],
+      courseNoteDisplay: null,
+      courseNoteDate: [],
+      courseNoteDetail: [],
+      courseNoteWriter: [],
+      privateNoteDisplay: null,
+      privateNoteDate: [],
+      privateNoteDetail: [],
       selectCourse: false,
       selectedCourse:'',
       settingModal: false,
-      
       monthTodaySelect: 0,
       noteSegment: 0,
       courseCodeTask: [],
@@ -93,7 +95,9 @@ class MainScreen extends Component {
       friendsDisplay: null,
       
       showFriendsDetail: null,
-      friendsDetailModel: false
+      showNoteDetail: null,
+      friendsDetailModel: false,
+      noteDetailModel: false
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -300,6 +304,14 @@ _calendarMenuSelected = () => {
 }
 
 writenote = () => {
+  date = new Date()
+  writeDateTime =
+    month[date.getMonth()] + ' ' +
+    date.getDate() + ' ' +
+    date.getFullYear() + ', ' +
+    'at ' +
+    date.toLocaleTimeString();
+
   this.setState({
     courseNoteModalVisible: true,
     noteEdding: true,
@@ -336,7 +348,11 @@ saveNote = () => {
         },
         {
           text: 'OK', onPress: () => {
-            firebase.database().ref('users/' + user + '/note').child(writeDateTime).set(this.state.courseNote).then(
+            const pushkey = firebase.database().ref('users/' + user + '/note').push().key;
+            firebase.database().ref('users/' + user + '/note').child(pushkey).set({
+              note: this.state.courseNote,
+              date: writeDateTime
+            }).then(
               this.setState({
                 courseNoteModalVisible: false,
                 noteEdding: false,
@@ -355,6 +371,7 @@ saveNote = () => {
 
   saveCourseNote = (selectedCourse) => {
     var user = firebase.auth().currentUser;
+    const pushkey = firebase.database().ref('course/' + selectedCourse + '/note').push().key;
     Alert.alert(
       'Save Public Note!',
       'Save this note to' + selectedCourse + 'note?',
@@ -365,7 +382,9 @@ saveNote = () => {
         },
         {
           text: 'OK', onPress: () => {
-            firebase.database().ref('course/' + selectedCourse + '/note').child(writeDateTime).set({
+            this.setState({isReady: false})
+            firebase.database().ref('course/' + selectedCourse + '/note').child(pushkey).set({
+              date: writeDateTime,
               note: this.state.courseNote,
               writer: user.displayName
             }).then(
@@ -420,9 +439,31 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
   this.setState({
     showFriendsDetail: show
   })
-
-
 }
+
+  viewNoteDetail = (noteCourse,noteDate,noteDetail, noteWriter) => {
+    const show =
+      <Card
+        raised
+        title={noteCourse+"        "+noteWriter}
+      >
+        <View style={{ marginBottom: 10 }}>
+          <Text style={styles.friendsNameDetailStyle}>{noteDetail}</Text>
+          <Text style={styles.friendsNameDetailStyle}>{noteDate}</Text>
+        </View>
+        <Button
+          icon={{ name: 'code' }}
+          backgroundColor='#03A9F4'
+          buttonStyle={{ borderRadius: 0, marginLeft: 0, marginRight: 0, marginBottom: 0 }}
+          title='OK'
+          onPress={() => this.setState({ noteDetailModel: false })} />
+      </Card>;
+
+
+    this.setState({
+      showNoteDetail: show
+    })
+  }
 
 
 async _cacheResourcesAsync() {
@@ -430,7 +471,7 @@ async _cacheResourcesAsync() {
 
     const rootRef = firebase.database().ref();
     const course = rootRef.child('users/' + user.uid + '/courseList');
-    course.once('value', snap => {
+    course.on('value', snap => {
       if (snap.val() != null) {
         snap.forEach(child => {
           this.setState({
@@ -454,7 +495,7 @@ async _cacheResourcesAsync() {
             })
           }
           
-          rootRef.child('course/' + child.key + '/coursework').once('value', snap => {
+          rootRef.child('course/' + child.key + '/coursework').on('value', snap => {
             if (snap.val() != null) {
                 snap.forEach(snapchild => {
 
@@ -509,44 +550,64 @@ async _cacheResourcesAsync() {
             }
           })
 
-          rootRef.child('course/' + child.key + '/note').once('value', snap => {
+          rootRef.child('course/' + child.key + '/note').on('value', snap => {
+            this.setState({
+              courseNoteDate: [],
+              courseNoteDetail: [],
+              courseNoteWriter: [],
+              courseNoteDisplay: null
+            })
             snap.forEach(snapNote => {
               this.setState({
-                noteDate: this.state.noteDate.concat([snapNote.key]),
-                noteDetail: this.state.noteDetail.concat([snapNote.child('note')]),
-                noteWriter: this.state.noteWriter.concat([snapNote.child('writer')])
+                courseNoteDate: this.state.courseNoteDate.concat([snapNote.child('date').val()]),
+                courseNoteDetail: this.state.courseNoteDetail.concat([snapNote.child('note').val()]),
+                courseNoteWriter: this.state.courseNoteWriter.concat([snapNote.child('writer').val()]),
               })
+            })
 
-              if(this.state.noteDate.length > 0) {
-                const noteDisplay = this.state.noteDate.map((note, index) => {
+              if(this.state.courseNoteDate.length > 0) {
+                this.setState({
+                  courseNoteDate : this.state.courseNoteDate.reverse(),
+                  courseNoteDetail : this.state.courseNoteDetail.reverse(),
+                  courseNoteWriter : this.state.courseNoteWriter.reverse()
+                })
+                const courseNoteDisplay = this.state.courseNoteDate.map((note, index) => 
                   <View key={index}>
                     <Swipeout right={[{
                       text: 'Delete',
                       backgroundColor: 'red',
-                      onPress: function () { Alert.alert('Delete?') }
+                      onPress: function () { Alert.alert('Delete?') },
+                      autoClose: true
                     }]}
                       style={{ marginTop: 10 }}
+                      disabled ={user.displayName !== this.state.courseNoteWriter[index]? true:false}
                     >
-                      <View style={{ height: 80, marginTop: 10 }}>
-                        <Text>{this.state.noteDetail[index]}</Text>
-                        <View style={{ flexDirection: 'row' }}>
-                          <Text>{note}</Text>
-                          <Text>{this.state.noteWriter[index]}</Text>
+                      <TouchableHighlight onPress={() => {
+                        [
+                          this.viewNoteDetail(child.key, note, this.state.courseNoteDetail[index], this.state.courseNoteWriter[index]),
+                          this.setState({ noteDetailModel: true })
+                        ]
+                      }}
+                        underlayColor="rgba(200,200,200,0.3)"
+                      >
+                        <View style={{ height: 80, marginTop: 10 }}>
+                          <Text style={styles.noteDetail} numberOfLines={1}>{this.state.courseNoteDetail[index]}</Text>
+                          <View style={{ flexDirection: 'row' }}>
+                            <Text style={styles.noteDate}>{note}</Text>
+                            <Text style={styles.noteWriter} numberOfLines={1}>{child.key}</Text>
+                          </View>
                         </View>
-                      </View>
+                      </TouchableHighlight>
                     </Swipeout>
                   </View>
-                })
+                );
                   
                 this.setState({
-                  noteDisplay: noteDisplay
+                  courseNoteDisplay: courseNoteDisplay,
+                  isReady: true
                 })
               }
-            })
-
           })
-
-
         })
       } else {
         this.setState({
@@ -555,7 +616,57 @@ async _cacheResourcesAsync() {
       }
     })
 
-    rootRef.child('users/' + user.uid + '/friendsList').once('value', snap => {
+    rootRef.child('users/' + user.uid + '/note').on('value', snap => {
+      this.setState({
+        privateNoteDate: [],
+        privateNoteDetail: [],
+        privateNoteDisplay: null
+      })
+      snap.forEach(snapNote => {
+        this.setState({
+          privateNoteDate: this.state.privateNoteDate.concat([snapNote.child('date').val()]),
+          privateNoteDetail: this.state.privateNoteDetail.concat([snapNote.child('note').val()]),
+        })
+      })
+
+        if (this.state.privateNoteDate.length > 0) {
+          this.setState({
+            privateNoteDate: this.state.privateNoteDate.reverse(),
+            privateNoteDetail: this.state.privateNoteDetail.reverse()
+          })
+          const privateNoteDisplay = this.state.privateNoteDate.map((note, index) =>
+            <View key={index}>
+              <Swipeout right={[{
+                text: 'Delete',
+                backgroundColor: 'red',
+                onPress: function () { Alert.alert('Delete?') },
+                autoClose: true
+              }]}
+                style={{ marginTop: 10 }}
+              >
+                <TouchableHighlight onPress={() => {
+                  [
+                    this.viewNoteDetail("", note,this.state.privateNoteDetail[index],""),
+                    this.setState({noteDetailModel: true})
+                  ]}}
+                  underlayColor="rgba(200,200,200,0.3)"
+                >
+                  <View style={{ height: 80, marginTop: 10 }}>
+                    <Text style={styles.noteDetail} numberOfLines={1}>{this.state.privateNoteDetail[index]}</Text>
+                    <Text style={styles.noteDate}>{note}</Text>
+                  </View>
+                </TouchableHighlight>
+              </Swipeout>
+            </View>
+          );
+
+          this.setState({
+            privateNoteDisplay: privateNoteDisplay
+          })
+        }
+    })
+
+    rootRef.child('users/' + user.uid + '/friendsList').on('value', snap => {
       snap.forEach(snapFriend => {
         firebase.database().ref('users/' + snapFriend.key).once('value', snapshot => {
           if (snapshot.child('profile_picture').val() === null) {
@@ -811,11 +922,23 @@ async _cacheResourcesAsync() {
 
               <View style={{display: !this.state.courseNoteModalVisible? 'flex':'none'}}>
                 <View style={{ display: this.state.courseSelectStatus? 'flex':'none'}}>
-                    {this.state.noteDisplay}
+                    {this.state.courseNoteDisplay}
                 </View>
                 <View style={{ display: this.state.privateSelectStatus ? 'flex' : 'none' }}>
-                  <Text>Date...Note......</Text>
+                    {this.state.privateNoteDisplay}
                 </View>
+                <Modal
+                  animationType='fade'
+                  transparent={true}
+                  visible={this.state.noteDetailModel}
+                  onRequestClose={() => this.setState({ noteDetailModel: false })}
+                >
+                  <View style={styles.noteViewModel}>
+                      <View style={{ marginTop: 100 }}>
+                        {this.state.showNoteDetail}
+                      </View>
+                  </View>
+                </Modal>
               </View>
 
               <View style={{display: this.state.courseNoteModalVisible? 'flex':'none'}}>
@@ -868,8 +991,10 @@ async _cacheResourcesAsync() {
               visible={this.state.friendsDetailModel}
               onRequestClose={() => this.setState({ friendsDetailModel: false })}
             >
-              <View style={{marginTop: 80}}>
-                {this.state.showFriendsDetail}
+              <View style={styles.noteViewModel}>
+                <View style={{marginTop: 80}}>
+                  {this.state.showFriendsDetail}
+                </View>
               </View>
             </Modal>
 

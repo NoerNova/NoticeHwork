@@ -8,9 +8,6 @@ import {
   Alert
 } from 'react-native';
 
-import {
-  AppLoading
-} from 'expo';
 
 import * as firebase from 'firebase';
 import firebaseConfig from './firebaseConfig.js';
@@ -21,7 +18,6 @@ class FirstPage extends Component {
   constructor(props){
     super(props);
     this.state = {
-      isReady: false,
       loggedIn: false,
     }
   }
@@ -31,39 +27,35 @@ class FirstPage extends Component {
   }
 
   render() {
-    if (!this.state.isReady) {
-      return <AppLoading />;
-    }
-
     return (
       <View style={styles.container}>
         <Image style={styles.logo} source={require('../img/logo2.png')} />
+        <Text style={styles.Ntext}>NoticeHwork</Text>
         <Image style={styles.loading} source={require('../img/icon/Loading_icon.gif')} />
       </View>
     );
   }
 
   async _cacheResourcesAsync() {
-    setTimeout(() => {
-      firebase.auth().onAuthStateChanged(function (user) {
-        if (user) {
-          const rootRef = firebase.database().ref();
-          const course = rootRef.child('users/' + user.uid + '/courseList');
-          course.once('value', snap => {
-            if (snap.val() != null) {
-              Actions.mainscreen();
+
+        setTimeout(() => {
+          firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+              const rootRef = firebase.database().ref();
+              const course = rootRef.child('users/' + user.uid + '/courseList');
+              course.once('value', snap => {
+                if (snap.val() != null) {
+                  Actions.mainscreen();
+                } else {
+                  Actions.course();
+                }
+              })
             } else {
               Actions.course();
             }
           })
-        } else {
-          Actions.course();
-        }
-      })
-
-      this.setState({ isReady: true });
-    }, 1000)
-  }
+        }, 1000)
+      }
 }
 
 const styles = StyleSheet.create({
@@ -82,6 +74,10 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50
   },
+  Ntext: {
+    fontSize: 20,
+    fontWeight: 'bold'
+  }
 })
 
 export default FirstPage;
