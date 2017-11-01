@@ -111,6 +111,7 @@ class CreateNewTask extends Component {
         let priority = this.state.priority
         let comment = this.state.newTaskComment
         let publishby = publicher
+        let course = this.state.selectedCourse
 
         if (this.state.selectedCourse !== '') {
             let taskPushKey = firebase.database().ref('course/' + this.state.selectedCourse + "/coursework").push().key
@@ -131,7 +132,22 @@ class CreateNewTask extends Component {
                                 comment: comment,
                                 publishby: publishby,
                                 title: this.state.newTaskTitle
-                            }), Alert.alert('Finish Publish'), this.setState({
+                            }),
+                                firebase.database().ref('course/' + this.state.selectedCourse + '/courseMember').once('value', member => {
+                                member.forEach(child => {
+                                    firebase.database().ref('users/'+ child.key +'/coursework/' + taskPushKey).set({
+                                        course: course,
+                                        descriptions: descriptions,
+                                        duedate: duedate,
+                                        priority: priority,
+                                        comment: comment,
+                                        publishby: publishby,
+                                        title: this.state.newTaskTitle,
+                                        status: false
+                                    })
+                                })
+                            })
+                            , Alert.alert('Finish Publish'), this.setState({
                                 newTaskModal: false,
                                 newTaskDescription: '',
                                 dueDate: '',
@@ -228,7 +244,7 @@ class CreateNewTask extends Component {
                                 </View>
                                 <View style={{ borderBottomWidth: 2, borderBottomColor: 'rgba(200,200,200,0.6)', marginLeft: 20, marginRight: 20 }}></View>
                                 <TouchableHighlight style={[styles.taskPriority, {
-                                    backgroundColor: this.state.priority === 'NORMAL' ? 'green' : this.state.priority === 'HIGH' ? 'orange' : 'red'
+                                    backgroundColor: this.state.priority === 'NORMAL' ? 'green' : this.state.priority === 'MEDIUM' ? 'orange' : 'red'
                                 }]} onPress={() => this.setState({ prioritySet: true })}>
                                     <Text style={{ color: 'white' }}>{this.state.priority}</Text>
                                 </TouchableHighlight>
@@ -257,7 +273,7 @@ class CreateNewTask extends Component {
                     <TouchableWithoutFeedback onPress={() => this.setState({ selectCourse: false })}>
                         <View style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                             <View style={{ height: 350, backgroundColor: 'white', marginTop: 350 }}>
-                            <ScrollView>
+                            <ScrollView style={{height: 8000}}>
                                 {this.state.course}
                             </ScrollView>
                             </View>
@@ -276,13 +292,13 @@ class CreateNewTask extends Component {
                         <View style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                             <View style={{ height: 350, backgroundColor: 'white', marginTop: 350 }}>
                                 <TouchableHighlight style={styles.courseListContainer} onPress={() => this.setState({ priority: 'NORMAL', prioritySet: false })} underlayColor='transparent'>
-                                    <Text style={styles.courseCodeText} numberOfLines={1}>Normal (Defaule)</Text>
+                                    <Text style={styles.courseCodeText} numberOfLines={1}>Normal (Default)</Text>
+                                </TouchableHighlight>
+                                <TouchableHighlight style={styles.courseListContainer} onPress={() => this.setState({ priority: 'MEDIUM', prioritySet: false })} underlayColor='transparent'>
+                                    <Text style={styles.courseCodeText} numberOfLines={1}>Medium</Text>
                                 </TouchableHighlight>
                                 <TouchableHighlight style={styles.courseListContainer} onPress={() => this.setState({ priority: 'HIGH', prioritySet: false })} underlayColor='transparent'>
                                     <Text style={styles.courseCodeText} numberOfLines={1}>High</Text>
-                                </TouchableHighlight>
-                                <TouchableHighlight style={styles.courseListContainer} onPress={() => this.setState({ priority: 'DEADLINE', prioritySet: false })} underlayColor='transparent'>
-                                    <Text style={styles.courseCodeText} numberOfLines={1}>Dead Line</Text>
                                 </TouchableHighlight>
                             </View>
                         </View>

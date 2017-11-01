@@ -127,7 +127,8 @@ class NewCourse extends Component {
       instructorSaveState: 'cancel',
       instructorModalVisible: false,
 
-      courseNameCodeModalVisible: false
+      courseNameCodeModalVisible: false,
+      isReady: true
     }
   }
 
@@ -456,6 +457,7 @@ class NewCourse extends Component {
   }
 
   courseSave = () => {
+    this.setState({isReady: false})
     let courseName = this.state.courseName
     let courseCode = this.state.courseCode
     let room = this.state.room
@@ -518,7 +520,7 @@ class NewCourse extends Component {
                 },
               });
 
-              firebase.database().ref('course/' + courseCode + '/courseMember').child(user.displayName).set(
+              firebase.database().ref('course/' + courseCode + '/courseMember').child(user.uid).set(
                  "Admin"
                );
 
@@ -612,6 +614,7 @@ class NewCourse extends Component {
               
 
                   Alert.alert('Complete', 'Created New \''+ courseName+ '\' Course.')
+                  this.setState({isReady: true})
                   Actions.course();
           } else {
               Alert.alert('Someting is going wrong');
@@ -625,6 +628,20 @@ class NewCourse extends Component {
 
 
   render() {
+    if (!this.state.isReady) {
+      return (
+        <View style={{
+          flex: 1,
+          height: null,
+          width: null,
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <Text>Saving...</Text>
+          <Image style={{ width: 50, height: 50 }} source={require('../img/icon/Loading_icon.gif')} />
+        </View>
+      )
+    }
     return(
       <View style={styles.newCourseContainer}>
       <StatusBar hidden />

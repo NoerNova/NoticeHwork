@@ -76,7 +76,7 @@ class Course extends Component {
   }
 
   componentWillMount(){
-    this._cacheResourcesAsync();
+    this.loadCourse();
   }
 
   leaveEditCourse = () => {
@@ -113,7 +113,7 @@ class Course extends Component {
           course: null,
         })
         this.closeCourseView()
-        this._cacheResourcesAsync()
+        this.loadCourse()
       })
     );
 
@@ -129,7 +129,7 @@ class Course extends Component {
           justifyContent: 'center',
           alignItems: 'center'
         }}>
-          <Text>Loading...</Text>
+          <Text>Course Loading...</Text>
           <Image style={{width: 50, height: 50}} source={require('../img/icon/Loading_icon.gif')} />
         </View>
       )
@@ -250,8 +250,8 @@ class Course extends Component {
           })
         }
 
-        let userName = firebase.auth().currentUser.displayName;
-        firebase.database().ref('course/' + courseCode + '/courseMember/' + userName).once('value').then((snapshot) => {
+        let user = firebase.auth().currentUser;
+        firebase.database().ref('course/' + courseCode + '/courseMember/' + user.uid).once('value').then((snapshot) => {
           if(snapshot.val() === 'Admin'){
             this.setState({adminState: true})
           }else {
@@ -560,23 +560,28 @@ closeCourseView = () => {
     );
   }
 
-  async _cacheResourcesAsync() {
+  async loadCourse() {
     const user = firebase.auth().currentUser;
+    this.setState({
+      courseCodeTask: [],
+      courseNameTask: [],
+    })
 
     if(user != null){
       const rootRef = firebase.database().ref();
-      const course = rootRef.child('users/' + user.uid + '/courseList');
-      course.once('value', snap => {
+      const courseLoad = rootRef.child('users/' + user.uid + '/courseList');
+      courseLoad.once('value', snap => {
         if(snap.val() != null){
-          snap.forEach(child => {
+          snap.forEach(snapCourse => {
             this.setState({
-              courseCodeTask: this.state.courseCodeTask.concat([child.key]),
-              courseNameTask: this.state.courseNameTask.concat([child.val()]),
-            });
+              courseCodeTask: this.state.courseCodeTask.concat([snapCourse.key]),
+              courseNameTask: this.state.courseNameTask.concat([snapCourse.val()]),
+            })
+          })
 
-          if(this.state.courseNameTask.length > 0){
+          if (this.state.courseNameTask.length > 0) {
             const courseList = this.state.courseCodeTask.map((courseList, index) =>
-              <View key={index} style={{justifyContent: 'center', alignItems: 'center'}}>
+              <View key={index} style={{ justifyContent: 'center', alignItems: 'center' }}>
                 <TouchableHighlight style={styles.courseListContainer} onPress={() => this.courseView(courseList)}>
                   <View style={styles.courseNameCodeText}>
                     <Text style={styles.courseCodeText}>{courseList}</Text>
@@ -590,9 +595,13 @@ closeCourseView = () => {
               course: courseList,
               isReady: true
             })
+          } else {
+            this.setState({
+              isReady: true
+            })
           }
-          })
-        }else{
+
+        } else {
           this.setState({
             isReady: true
           })

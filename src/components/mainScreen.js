@@ -27,7 +27,7 @@ import {Actions} from 'react-native-router-flux';
 import SegmentedControlTab from 'react-native-segmented-control-tab';
 
 import PushController from "./PushController";
-import { Card, Button, Icon } from 'react-native-elements';
+import { Card, Button, Icon, CheckBox } from 'react-native-elements';
 
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -43,9 +43,13 @@ var writeDateTime =
     'at ' +
     date.toLocaleTimeString();
 
+const normal = { key: 'normal', color: 'green', selectedColor: 'orange' };
+const medium = { key: 'medium', color: 'orange', selectedColor: 'orange' };
+const high = { key: 'high', color: 'red', selectedColor: 'orange' };
+
 class MainScreen extends Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
     this.state = {
       isReady: false,
       monthSelectStatus: true,
@@ -97,7 +101,8 @@ class MainScreen extends Component {
       showFriendsDetail: null,
       showNoteDetail: null,
       friendsDetailModel: false,
-      noteDetailModel: false
+      noteDetailModel: false,
+      checked: false
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -132,48 +137,10 @@ class MainScreen extends Component {
 
   onDayPress(day) {
     let markedDates = { ...this.state.markedDay }
-    let markedDatesIndex = { ...this.state.markedDay }
-    if(this.state.markedDayIndex !== ''){
-      delete markedDates[this.state.markedDayIndex];
-
-      if(markedDates[day.dateString] !== undefined){
-        markedDates[day.dateString] = [{ textColor: 'white', startingDay: true, color: '#00adf5' }, { textColor: 'white', endingDay: true, color: '#00adf5' }];
-        this.setState({
-          markedDay: markedDates,
-          markedDayIndex: ""
-        })
-
-        console.log("Have Index Not Null")
-      }else{
-        markedDates[day.dateString] = [{ textColor: 'white', startingDay: true, color: '#00adf5' }, { textColor: 'white', endingDay: true, color: '#00adf5' }];
-        this.setState({
-          markedDay: markedDates,
-          markedDayIndex: day.dateString
-        })
-
-        console.log("Have Index")
-      }
-
-
-    }else{
-      if (markedDates[day.dateString] !== undefined){
-          markedDates[day.dateString] = [{ textColor: 'white', startingDay: true, color: '#00adf5' }, { textColor: 'white', endingDay: true, color: '#00adf5' }];
-          this.setState({
-            markedDay: markedDates,
-            markedDayIndex: ""
-          })
-
-          console.log("Not Null")
-      }else{
-          markedDates[day.dateString] = [{ textColor: 'white', startingDay: true, color: '#00adf5' }, { textColor: 'white', endingDay: true, color: '#00adf5' }];
-          this.setState({
-            markedDay: markedDates,
-            markedDayIndex: day.dateString
-          })
-
-          console.log("Null Set Index")
-      }
-    }
+    markedDates[day.dateString] = [{ selected: true }];
+    this.setState({
+      markedDay: markedDates
+    })
   }
 
 loadDay = (day) => {
@@ -471,12 +438,12 @@ async _cacheResourcesAsync() {
 
     const rootRef = firebase.database().ref();
     const course = rootRef.child('users/' + user.uid + '/courseList');
-    course.on('value', snap => {
+    course.once('value', snap => {
       if (snap.val() != null) {
         snap.forEach(child => {
           this.setState({
             courseCodeTask: this.state.courseCodeTask.concat([child.key]),
-            courseNameTask: this.state.courseNameTask.concat([child.val()])
+            courseNameTask: this.state.courseNameTask.concat([child.val()]),
           });
 
           if (this.state.courseNameTask.length > 0) {
@@ -493,70 +460,16 @@ async _cacheResourcesAsync() {
             this.setState({
               course: courseList
             })
+          }else{
+            console.log('someTHine went wrong')
+
+            this.setState({
+              isReady: true
+            })
           }
           
-          rootRef.child('course/' + child.key + '/coursework').on('value', snap => {
-            if (snap.val() != null) {
-                snap.forEach(snapchild => {
-
-                  let course = child.key;
-                  let title = snapchild.child('title');
-                  let comment = snapchild.child('comment').val();
-                  let descriptions = snapchild.child('descriptions').val();
-                  let duedate = snapchild.child('duedate').val();
-                  let priority = snapchild.child('priority').val();
-                  let publishby = snapchild.child('publishby').val();
-
-
-                  let getDueDate = new Date(duedate);
-                  let getMarkedDates = getDueDate.getFullYear() + "-" + (getDueDate.getMonth() + 1) + "-" + getDueDate.getDate();
-
-                  let markedDates = { ...this.state.markedDay }
-
-                  if(markedDates[getMarkedDates] !== undefined){
-                    if(priority !== 'NORMAL'){
-                      markedDates[getMarkedDates] = [{ textColor: 'white', startingDay: true, color:  priority === 'HIGH' ? 'orange' : 'red' },
-                      { textColor: 'white', endingDay: true, color: priority === 'HIGH' ? 'orange' : 'red' }];
-                      this.setState({
-                        markedDay: markedDates
-                      })
-                    }
-                  }else{
-                    markedDates[getMarkedDates] = [{ textColor: 'white', startingDay: true, color: priority === 'NORMAL' ? 'green' : priority === 'HIGH' ? 'orange' : 'red' },
-                    { textColor: 'white', endingDay: true, color: priority === 'NORMAL' ? 'green' : priority === 'HIGH' ? 'orange' : 'red' }];
-                    this.setState({
-                      markedDay: markedDates
-                    })
-                  }
-
-                  let items = { ...this.state.items }
-
-                  items[getMarkedDates] = [{
-                    name: title + '\n' + descriptions + '\n' + publishby,
-                    height: Math.max(50, Math.floor(Math.random() * 150))
-                  }];
-
-                  const newItems = {};
-                  Object.keys(items).forEach(key => { newItems[key] = items[key]; });
-                  this.setState({
-                    items: newItems
-                  });
-
-                })
-
-                this.setState({isReady : true})
-            }else{
-              this.setState({ isReady: true })
-            }
-          })
 
           rootRef.child('course/' + child.key + '/note').on('value', snap => {
-            this.setState({
-              courseNoteDate: [],
-              courseNoteDetail: [],
-              courseNoteWriter: [],
-              courseNoteDisplay: null
-            })
             snap.forEach(snapNote => {
               this.setState({
                 courseNoteDate: this.state.courseNoteDate.concat([snapNote.child('date').val()]),
@@ -606,6 +519,10 @@ async _cacheResourcesAsync() {
                   courseNoteDisplay: courseNoteDisplay,
                   isReady: true
                 })
+              }else{
+                this.setState({
+                  isReady: true
+                })
               }
           })
         })
@@ -616,12 +533,76 @@ async _cacheResourcesAsync() {
       }
     })
 
+    let dots = []
+
+    rootRef.child('users/' + user.uid + '/coursework').on('value', snap => {
+      if (snap.val() != null) {
+        snap.forEach(snapchild => {
+
+          let course = snapchild.key;
+          let title = snapchild.child('title').val();
+          let comment = snapchild.child('comment').val();
+          let descriptions = snapchild.child('descriptions').val();
+          let duedate = snapchild.child('duedate').val();
+          let priority = snapchild.child('priority').val();
+          let publishby = snapchild.child('publishby').val();
+          let status = snapchild.child('status').val();
+
+
+          let getDueDate = new Date(duedate);
+          let getMarkedDates = getDueDate.getFullYear() + "-" + (getDueDate.getMonth() + 1) + "-" + getDueDate.getDate();
+          
+
+          let markedDates = { ...this.state.markedDay }
+          
+          
+          if(priority === 'NORMAL'){
+            if (!dots.includes(normal)) {
+              console.log('1')
+              dots.push(normal)
+            } 
+          }else if(priority === 'MEDIUM'){
+            if (!dots.includes(medium)) {
+              console.log('2')
+              dots.push(medium)
+            }
+          }else if(priority === 'HIGH'){
+            if (!dots.includes(high)) {
+              console.log('3')
+              dots.push(high)
+            }
+          }
+
+
+          markedDates[getMarkedDates] = [{dots:  dots }]
+
+          this.setState({
+            markedDay: markedDates
+          })
+          
+
+          let items = { ...this.state.items }
+
+          items[getMarkedDates] = [{
+            name: title + '\n' + descriptions + '\n' + publishby,
+            height: Math.max(50, Math.floor(Math.random() * 150))
+          }];
+
+          const newItems = {};
+          Object.keys(items).forEach(key => { newItems[key] = items[key]; });
+          this.setState({
+            items: newItems
+          });
+        })
+      } else {
+        console.log('NULL')
+        this.setState({
+          isReady: true
+        })
+      }
+    })
+
     rootRef.child('users/' + user.uid + '/note').on('value', snap => {
-      this.setState({
-        privateNoteDate: [],
-        privateNoteDetail: [],
-        privateNoteDisplay: null
-      })
       snap.forEach(snapNote => {
         this.setState({
           privateNoteDate: this.state.privateNoteDate.concat([snapNote.child('date').val()]),
@@ -749,6 +730,52 @@ async _cacheResourcesAsync() {
       })
     })
 
+    rootRef.child('users/' + user.uid + '/coursework').once('value', snap => {
+      snap.forEach(snapNote => {
+        this.setState({
+          privateNoteDate: this.state.privateNoteDate.concat([snapNote.child('date').val()]),
+          privateNoteDetail: this.state.privateNoteDetail.concat([snapNote.child('note').val()]),
+        })
+      })
+
+      if (this.state.privateNoteDate.length > 0) {
+        this.setState({
+          privateNoteDate: this.state.privateNoteDate.reverse(),
+          privateNoteDetail: this.state.privateNoteDetail.reverse()
+        })
+        const privateNoteDisplay = this.state.privateNoteDate.map((note, index) =>
+          <View key={index}>
+            <Swipeout right={[{
+              text: 'Delete',
+              backgroundColor: 'red',
+              onPress: function () { Alert.alert('Delete?') },
+              autoClose: true
+            }]}
+              style={{ marginTop: 10 }}
+            >
+              <TouchableHighlight onPress={() => {
+                [
+                  this.viewNoteDetail("", note, this.state.privateNoteDetail[index], ""),
+                  this.setState({ noteDetailModel: true })
+                ]
+              }}
+                underlayColor="rgba(200,200,200,0.3)"
+              >
+                <View style={{ height: 80, marginTop: 10 }}>
+                  <Text style={styles.noteDetail} numberOfLines={1}>{this.state.privateNoteDetail[index]}</Text>
+                  <Text style={styles.noteDate}>{note}</Text>
+                </View>
+              </TouchableHighlight>
+            </Swipeout>
+          </View>
+        );
+
+        this.setState({
+          privateNoteDisplay: privateNoteDisplay
+        })
+      }
+    })
+
 }
 
 
@@ -762,7 +789,7 @@ async _cacheResourcesAsync() {
           justifyContent: 'center',
           alignItems: 'center'
         }}>
-          <Text>Loading...</Text>
+          <Text>Loading All data...</Text>
           <Image style={{ width: 50, height: 50 }} source={require('../img/icon/Loading_icon.gif')} />
         </View>
       )
@@ -894,7 +921,7 @@ async _cacheResourcesAsync() {
                   textDayHeaderFontSize: Platform.OS === 'ios'? 14:16
                 }}
                 markedDates={this.state.markedDay}
-                markingType={'interactive'}
+                markingType={'multi-dot'}
                 
               />
             </View>
@@ -910,6 +937,21 @@ async _cacheResourcesAsync() {
                   selected={this.state.todayDate}
                   markedDates={this.state.markedDay}
               />
+            </View>
+
+            <View style={{ display: this.state.checktaskSelectStatus ? 'flex' : 'none' }}>
+                <CheckBox
+                  center
+                  title='Check to make complete'
+                  iconRight
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  checked={this.state.checked}
+                  onPress={() => this.setState({ checked: this.state.checked ? false : true })}
+                />
             </View>
 
             <View style={{display: this.state.noteSelectStatus? 'flex':'none'}}>
