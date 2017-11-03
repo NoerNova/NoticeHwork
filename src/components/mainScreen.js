@@ -35,7 +35,8 @@ import Swipeout from 'react-native-swipeout';
 
 var date = new Date();
 var month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
+var monthLess = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 var writeDateTime =
     month[date.getMonth()] + ' ' +
     date.getDate() + ' ' +
@@ -54,6 +55,8 @@ class MainScreen extends Component {
       isReady: false,
       monthSelectStatus: true,
       todaySelectStatus: false,
+      inprogressSelectStatus: true,
+      completedSelectedStatus: false,
       calendarSelectStatus: true,
       checktaskSelectStatus: false,
       noteSelectStatus: false,
@@ -78,6 +81,7 @@ class MainScreen extends Component {
       selectedCourse:'',
       settingModal: false,
       monthTodaySelect: 0,
+      completeInprogressSelect: 0,
       noteSegment: 0,
       courseCodeTask: [],
       courseNameTask: [],
@@ -102,7 +106,19 @@ class MainScreen extends Component {
       showNoteDetail: null,
       friendsDetailModel: false,
       noteDetailModel: false,
-      checked: false
+      checked: false,
+
+      workDueDate: [],
+      workList: [],
+      workStatus: [],
+      workListKey: [],
+      workListShow: null,
+
+      workCompletedDueDate: [],
+      workCompletedList: [],
+      workCompleteKey: [],
+      workCompletedStatue: [],
+      workCompletedListShow: null
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -164,6 +180,22 @@ _monthTodaySelected = (index) => {
     })
   }
 }
+
+  _completeInprogressSelect = (index) => {
+    if (index === 0) {
+      this.setState({
+        inprogressSelectStatus: true,
+        completedSelectedStatus: false,
+        completeInprogressSelect: index
+      })
+    } else {
+      this.setState({
+        inprogressSelectStatus: false,
+        completedSelectedStatus: true,
+        completeInprogressSelect: index
+      })
+    }
+  }
 
   _NoteSegment = (index) => {
     if(index === 0){
@@ -432,6 +464,127 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
     })
   }
 
+  setWorkStatus = (index, status) => {
+    let user = firebase.auth().currentUser;
+    
+    
+    if(status){
+      
+      firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workCompleteKey[index]).update({
+        status: false
+      }).then(() => {
+         let workCompletedStatue = this.state.workCompletedStatue
+
+          workCompletedStatue[index] = false
+
+          this.setState({
+            workCompletedStatue: workCompletedStatue,
+        })
+          if (this.state.workList.length > 0) {
+            const workList = this.state.workList.map((work, index) =>
+              <View key={index}>
+                <CheckBox
+                  title={work + '         ' + this.state.workDueDate[index]}
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  containerStyle={{ height: 50, flex: 1 }}
+                  onLongPress={() => Alert.alert('Hello Task')}
+                  checked={this.state.workStatus[index]}
+                  onPress={() => this.setWorkStatus(index, false)}
+                />
+              </View>
+            );
+            this.setState({
+              workListShow: workList
+            })
+          }
+
+          if (this.state.workCompletedList.length > 0) {
+            const workList = this.state.workCompletedList.map((work, index) =>
+              <View key={index}>
+                <CheckBox
+                  checked={this.state.workCompletedStatue[index]}
+                  title={work + '         ' + this.state.workCompletedDueDate[index]}
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  containerStyle={{ height: 50 }}
+                  onLongPress={() => Alert.alert('Hello Task')}
+                  onPress={() => this.setWorkStatus(index, true)}
+                />
+              </View>
+            );
+            this.setState({
+              workCompletedListShow: workList
+            })
+          } 
+        console.log(this.state.workCompletedStatue[index])
+
+      })
+    }else{
+      firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workListKey[index]).update({
+        status: true
+      }).then(() => {
+          let workStatus = {...this.state.workStatus}
+
+          workStatus[index] = true
+
+          this.setState({
+            workStatus: workStatus,
+          })
+          if (this.state.workList.length > 0) {
+            const workList = this.state.workList.map((work, index) =>
+              <View key={index}>
+                <CheckBox
+                  title={work + '         ' + this.state.workDueDate[index]}
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  containerStyle={{ height: 50, flex: 1 }}
+                  onLongPress={() => Alert.alert('Hello Task')}
+                  checked={this.state.workStatus[index]}
+                  onPress={() => this.setWorkStatus(index, false)}
+                />
+              </View>
+            );
+            this.setState({
+              workListShow: workList
+            })
+          }
+
+          if (this.state.workCompletedList.length > 0) {
+            const workList = this.state.workCompletedList.map((work, index) =>
+              <View key={index}>
+                <CheckBox
+                  checked={this.state.workCompletedStatue[index]}
+                  title={work + '         ' + this.state.workCompletedDueDate[index]}
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  containerStyle={{ height: 50 }}
+                  onLongPress={() => Alert.alert('Hello Task')}
+                  onPress={() => this.setWorkStatus(index, true)}
+                />
+              </View>
+            );
+            this.setState({
+              workCompletedListShow: workList
+            })
+          } 
+          console.log(this.state.workStatus[index])
+      })
+    } 
+  }
+
 
 async _cacheResourcesAsync() {
   const user = firebase.auth().currentUser;
@@ -535,11 +688,11 @@ async _cacheResourcesAsync() {
 
     let dots = []
 
-    rootRef.child('users/' + user.uid + '/coursework').on('value', snap => {
+    rootRef.child('users/' + user.uid + '/coursework').once('value', snap => {
       if (snap.val() != null) {
         snap.forEach(snapchild => {
 
-          let course = snapchild.key;
+          let workKey = snapchild.key
           let title = snapchild.child('title').val();
           let comment = snapchild.child('comment').val();
           let descriptions = snapchild.child('descriptions').val();
@@ -551,25 +704,84 @@ async _cacheResourcesAsync() {
 
           let getDueDate = new Date(duedate);
           let getMarkedDates = getDueDate.getFullYear() + "-" + (getDueDate.getMonth() + 1) + "-" + getDueDate.getDate();
-          
-
+          let getShowDueDate = day[getDueDate.getDay()] + ', ' + monthLess[(getDueDate.getMonth() + 1)] + ' ' + getDueDate.getDate();
           let markedDates = { ...this.state.markedDay }
+
+          if(!status){
+            this.setState({
+              workListKey: this.state.workListKey.concat([workKey]),
+              workDueDate: this.state.workDueDate.concat([getShowDueDate]),
+              workList: this.state.workList.concat([title]),
+              workStatus: this.state.workStatus.concat([status])
+            })
+          }else{
+            this.setState({
+              workCompleteKey: this.state.workCompleteKey.concat([workKey]),
+              workCompletedDueDate: this.state.workCompletedDueDate.concat([getShowDueDate]),
+              workCompletedList: this.state.workCompletedList.concat([title]),
+              workCompletedStatue: this.state.workCompletedStatue.concat([status])
+            })
+          }
+
+          if (this.state.workList.length > 0) {
+            const workList = this.state.workList.map((work, index) =>
+              <View key={index}>
+                <CheckBox
+                  title={work + '         ' + this.state.workDueDate[index]}
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  containerStyle={{ height: 50, flex: 1 }}
+                  onLongPress={() => Alert.alert('Hello Task')}
+                  checked={this.state.workStatus[index]}
+                  onPress={() => this.setWorkStatus(index, false)}
+                />
+              </View>
+            );
+            this.setState({
+              workListShow: workList
+            })
+          }
+
+          if (this.state.workCompletedList.length > 0) {
+            const workList = this.state.workCompletedList.map((work, index) =>
+              <View key={index}>
+                <CheckBox
+                  checked={this.state.workCompletedStatue[index]}
+                  title={work + '         ' + this.state.workCompletedDueDate[index]}
+                  iconType='material'
+                  checkedIcon='check-circle'
+                  uncheckedIcon='clear'
+                  checkedColor='green'
+                  uncheckedColor='red'
+                  containerStyle={{ height: 50 }}
+                  onLongPress={() => Alert.alert('Hello Task')}
+                  onPress={() => this.setWorkStatus(index, true)}
+                />
+              </View>
+            );
+            this.setState({
+              workCompletedListShow: workList
+            })
+          } 
           
           
           if(priority === 'NORMAL'){
             if (!dots.includes(normal)) {
               console.log('1')
-              dots.push(normal)
+              dots.concat(normal)
             } 
           }else if(priority === 'MEDIUM'){
             if (!dots.includes(medium)) {
               console.log('2')
-              dots.push(medium)
+              dots.concat(medium)
             }
           }else if(priority === 'HIGH'){
             if (!dots.includes(high)) {
               console.log('3')
-              dots.push(high)
+              dots.concat(high)
             }
           }
 
@@ -642,7 +854,8 @@ async _cacheResourcesAsync() {
           );
 
           this.setState({
-            privateNoteDisplay: privateNoteDisplay
+            privateNoteDisplay: privateNoteDisplay,
+            isReady: true
           })
         }
     })
@@ -729,53 +942,6 @@ async _cacheResourcesAsync() {
         })
       })
     })
-
-    rootRef.child('users/' + user.uid + '/coursework').once('value', snap => {
-      snap.forEach(snapNote => {
-        this.setState({
-          privateNoteDate: this.state.privateNoteDate.concat([snapNote.child('date').val()]),
-          privateNoteDetail: this.state.privateNoteDetail.concat([snapNote.child('note').val()]),
-        })
-      })
-
-      if (this.state.privateNoteDate.length > 0) {
-        this.setState({
-          privateNoteDate: this.state.privateNoteDate.reverse(),
-          privateNoteDetail: this.state.privateNoteDetail.reverse()
-        })
-        const privateNoteDisplay = this.state.privateNoteDate.map((note, index) =>
-          <View key={index}>
-            <Swipeout right={[{
-              text: 'Delete',
-              backgroundColor: 'red',
-              onPress: function () { Alert.alert('Delete?') },
-              autoClose: true
-            }]}
-              style={{ marginTop: 10 }}
-            >
-              <TouchableHighlight onPress={() => {
-                [
-                  this.viewNoteDetail("", note, this.state.privateNoteDetail[index], ""),
-                  this.setState({ noteDetailModel: true })
-                ]
-              }}
-                underlayColor="rgba(200,200,200,0.3)"
-              >
-                <View style={{ height: 80, marginTop: 10 }}>
-                  <Text style={styles.noteDetail} numberOfLines={1}>{this.state.privateNoteDetail[index]}</Text>
-                  <Text style={styles.noteDate}>{note}</Text>
-                </View>
-              </TouchableHighlight>
-            </Swipeout>
-          </View>
-        );
-
-        this.setState({
-          privateNoteDisplay: privateNoteDisplay
-        })
-      }
-    })
-
 }
 
 
@@ -838,6 +1004,18 @@ async _cacheResourcesAsync() {
               />
             </View>
           </View>
+
+          <View style={{ display: this.state.checktaskSelectStatus ? 'flex' : 'none' }}>
+            <View style={[styles.headMenuButtonContainer, {marginBottom: 10}]}>
+              <SegmentedControlTab
+                values={['Inprogress', 'Completed']}
+                selectedIndex={this.state.completeInprogressSelect}
+                onTabPress={this._completeInprogressSelect}
+                tabsContainerStyle= {{width: 150, marginLeft: -25}}
+              />
+            </View>
+          </View>
+
           <View style={{display: this.state.noteSelectStatus? 'flex':'none'}}>
             <View style={[styles.headMenuButtonContainer, {paddingBottom: 11}]}>
               <SegmentedControlTab
@@ -939,19 +1117,11 @@ async _cacheResourcesAsync() {
               />
             </View>
 
-            <View style={{ display: this.state.checktaskSelectStatus ? 'flex' : 'none' }}>
-                <CheckBox
-                  center
-                  title='Check to make complete'
-                  iconRight
-                  iconType='material'
-                  checkedIcon='check-circle'
-                  uncheckedIcon='clear'
-                  checkedColor='green'
-                  uncheckedColor='red'
-                  checked={this.state.checked}
-                  onPress={() => this.setState({ checked: this.state.checked ? false : true })}
-                />
+            <View style={{ display: this.state.checktaskSelectStatus && this.state.inprogressSelectStatus ? 'flex' : 'none' }}>
+                {this.state.workListShow}
+            </View>
+            <View style={{ display: this.state.checktaskSelectStatus && this.state.completedSelectedStatus ? 'flex' : 'none' }}>
+              {this.state.workCompletedListShow}
             </View>
 
             <View style={{display: this.state.noteSelectStatus? 'flex':'none'}}>
