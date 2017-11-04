@@ -115,6 +115,7 @@ class CreateNewTask extends Component {
 
         if (this.state.selectedCourse !== '') {
             let taskPushKey = firebase.database().ref('course/' + this.state.selectedCourse + "/coursework").push().key
+            let taskCommentPushKey = firebase.database().ref('course/' + this.state.selectedCourse + "/coursework/" + taskPushKey + '/comment').push().key
             Alert.alert(
                 `Publish to ${this.state.selectedCourse}`,
                 'By Press OK, will public new task to Course and anyone who subcribe course will see this.',
@@ -129,25 +130,35 @@ class CreateNewTask extends Component {
                                 descriptions: descriptions,
                                 duedate: duedate,
                                 priority: priority,
-                                comment: comment,
                                 publishby: publishby,
                                 title: this.state.newTaskTitle
-                            }),
-                                firebase.database().ref('course/' + this.state.selectedCourse + '/courseMember').once('value', member => {
+                            })
+                            if (comment !== '') {
+                                firebase.database().ref('course/' + this.state.selectedCourse + "/coursework/" + taskPushKey + '/comment/' + taskCommentPushKey).set({
+                                    user: user.displayName,
+                                    comment: comment
+                                })
+                            }
+                            firebase.database().ref('course/' + this.state.selectedCourse + '/courseMember').once('value', member => {
                                 member.forEach(child => {
                                     firebase.database().ref('users/'+ child.key +'/coursework/' + taskPushKey).set({
                                         course: course,
                                         descriptions: descriptions,
                                         duedate: duedate,
                                         priority: priority,
-                                        comment: comment,
                                         publishby: publishby,
                                         title: this.state.newTaskTitle,
                                         status: false
                                     })
+                                    if(comment !== ''){
+                                        firebase.database().ref('users/' + child.key + '/coursework/' + taskPushKey + '/comment/' + taskCommentPushKey).set({
+                                            user: user.displayName,
+                                            comment: comment
+                                        })
+                                    }
                                 })
-                            })
-                            , Alert.alert('Finish Publish'), this.setState({
+                            }),
+                             Alert.alert('Finish Publish'), this.setState({
                                 newTaskModal: false,
                                 newTaskDescription: '',
                                 dueDate: '',

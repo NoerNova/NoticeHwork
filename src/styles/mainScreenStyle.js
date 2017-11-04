@@ -138,13 +138,6 @@ const styles = StyleSheet.create({
      textAlignVertical: 'top',
   },
 
-  newTaskModalContainer: {
-    flex: 1,
-    height: null,
-    width: null,
-    backgroundColor: 'white',
-    marginTop: Platform.OS === 'ios'? 20:0
-  },
   newTaskModalHead: {
     paddingTop: Platform.OS === 'ios'? 40:20,
     paddingBottom: 20,
@@ -167,8 +160,8 @@ const styles = StyleSheet.create({
     fontSize: 18
   },
   newTaskTitleContainer: {
+    height: 50,
     justifyContent: 'center',
-    height: 50
   },
   newTaskTitleTextInput: {
     marginLeft: 30,
@@ -301,7 +294,58 @@ const styles = StyleSheet.create({
     width: null,
     height: null,
     backgroundColor: 'rgba(0,0,0,0.8)',
-  }
+  },
+
+  viewTaskModalContainer: {
+    flex: 1,
+    height: null,
+    width: null,
+    backgroundColor: 'white',
+    marginTop: Platform.OS === 'ios' ? 10 : 0
+  },
+  viewTaskModalHead: {
+    paddingTop: Platform.OS === 'ios' ? 10 : 20,
+    paddingBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  viewTaskHeadButton: {
+    padding: 10,
+  },
+  viewTaskText: {
+    marginLeft: Platform.OS === 'ios' ? 50 : 85,
+    marginRight: Platform.OS === 'ios' ? 65 : 85,
+    fontSize: 18,
+    fontWeight: 'bold'
+  },
+  viewTaskTitleContainer: {
+    height: 50,
+    justifyContent: 'center',
+  },
+  viewTaskTitleText: {
+    marginLeft: 30,
+    marginRight: 30,
+    fontSize: 18
+  },
+  viewTaskDetailText: {
+    marginLeft: 30,
+    marginRight: 30,
+    fontSize: 14
+  },
+  viewTaskDesContainer: {
+    paddingTop: 10,
+    height: 150,
+    paddingBottom: 5
+  },
+  viewTaskDescText: {
+    marginLeft: 30,
+    marginRight: 30,
+    fontSize: 18,
+    height: 130,
+    textAlignVertical: 'top',
+  },
 
 
 });

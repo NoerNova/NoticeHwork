@@ -32,6 +32,7 @@ import { Card, Button, Icon, CheckBox } from 'react-native-elements';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import Swipeout from 'react-native-swipeout';
+import Prompt from 'react-native-prompt';
 
 var date = new Date();
 var month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -108,17 +109,34 @@ class MainScreen extends Component {
       noteDetailModel: false,
       checked: false,
 
-      workDueDate: [],
-      workList: [],
-      workStatus: [],
       workListKey: [],
+      workComment: [],
+      workCourse: [],
+      workDescriptions: [],
+      workDueDate: [],
+      workPriority: [],
+      workPublishby: [],
+      workStatus: [],
+      workList: [],
       workListShow: null,
 
-      workCompletedDueDate: [],
-      workCompletedList: [],
       workCompleteKey: [],
-      workCompletedStatue: [],
-      workCompletedListShow: null
+      workCompletedComment: [],
+      workCompletedCourse: [],
+      workCompletedDescriptions: [],
+      workCompletedDueDate: [],
+      workCompletedPriority: [],
+      workCompletedPublishby: [],
+      workCompletedStatus: [],
+      workCompletedList: [],
+      workCompletedListShow: null,
+
+      viewTaskDetailModel: false,
+      viewTaskDetail: null,
+      newCommentPrompt: false,
+      newComment: '',
+      newCommentWorkKey: '',
+      newCommentCourse: '',
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -467,122 +485,233 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
   setWorkStatus = (index, status) => {
     let user = firebase.auth().currentUser;
     
-    
     if(status){
-      
-      firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workCompleteKey[index]).update({
-        status: false
-      }).then(() => {
-         let workCompletedStatue = this.state.workCompletedStatue
+      Alert.alert(
+        'Return Notification',
+        'This will start to notice you about this task again',
+        [
+          {
+            text: 'Cancel', onPress: () => null,
+            style: 'cancel'
+          },
+          {
+            text: 'OK', onPress: () => {
+              firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workCompleteKey[index]).update({
+                status: false
+              }).then(() => {
+                let workCompletedStatus = this.state.workCompletedStatus
 
-          workCompletedStatue[index] = false
+                workCompletedStatus[index] = false
 
-          this.setState({
-            workCompletedStatue: workCompletedStatue,
-        })
-          if (this.state.workList.length > 0) {
-            const workList = this.state.workList.map((work, index) =>
-              <View key={index}>
-                <CheckBox
-                  title={work + '         ' + this.state.workDueDate[index]}
-                  iconType='material'
-                  checkedIcon='check-circle'
-                  uncheckedIcon='clear'
-                  checkedColor='green'
-                  uncheckedColor='red'
-                  containerStyle={{ height: 50, flex: 1 }}
-                  onLongPress={() => Alert.alert('Hello Task')}
-                  checked={this.state.workStatus[index]}
-                  onPress={() => this.setWorkStatus(index, false)}
-                />
-              </View>
-            );
-            this.setState({
-              workListShow: workList
-            })
+                this.setState({
+                  workCompletedStatus: workCompletedStatus,
+                })
+
+                if (this.state.workCompletedList.length > 0) {
+                  const workList = this.state.workCompletedList.map((work, index) =>
+                    <View key={index}>
+                      <CheckBox
+                        checked={this.state.workCompletedStatus[index]}
+                        title={work + '         ' + this.state.workCompletedDueDate[index]}
+                        iconType='material'
+                        checkedIcon='check-circle'
+                        uncheckedIcon='clear'
+                        checkedColor='green'
+                        uncheckedColor='red'
+                        containerStyle={{ height: 50 }}
+                        onLongPress={() => [this.viewTaskDetail(
+                            this.state.workCompletedComment[index],
+                            this.state.workCompletedCourse[index],
+                            this.state.workCompletedDescriptions[index],
+                            this.state.workCompletedDueDate[index],
+                            this.state.workCompletedPriority[index],
+                            this.state.workCompletedPublishby[index],
+                            this.state.workCompletedStatus[index],
+                            this.state.workCompletedList[index],
+                            this.state.workCompleteKey[index]
+                          ),
+                          this.setState({ viewTaskDetailModel: true})]
+                        }
+                        onPress={() => this.setWorkStatus(index, true)}
+                      />
+                    </View>
+                  );
+                  this.setState({
+                    workCompletedListShow: workList
+                  })
+                }
+              })
+            }
           }
+        ],
+        {
+          cancelable: true
+        }
+      )
 
-          if (this.state.workCompletedList.length > 0) {
-            const workList = this.state.workCompletedList.map((work, index) =>
-              <View key={index}>
-                <CheckBox
-                  checked={this.state.workCompletedStatue[index]}
-                  title={work + '         ' + this.state.workCompletedDueDate[index]}
-                  iconType='material'
-                  checkedIcon='check-circle'
-                  uncheckedIcon='clear'
-                  checkedColor='green'
-                  uncheckedColor='red'
-                  containerStyle={{ height: 50 }}
-                  onLongPress={() => Alert.alert('Hello Task')}
-                  onPress={() => this.setWorkStatus(index, true)}
-                />
-              </View>
-            );
-            this.setState({
-              workCompletedListShow: workList
-            })
-          } 
-        console.log(this.state.workCompletedStatue[index])
-
-      })
     }else{
-      firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workListKey[index]).update({
-        status: true
-      }).then(() => {
-          let workStatus = {...this.state.workStatus}
+      Alert.alert(
+        'Finished Task',
+        'This will not notice you about this task again',
+        [
+          {
+            text: 'Cancel', onPress: () => null,
+            style: 'cancel'
+          },
+          {
+            text: 'OK', onPress: () => {
+              firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workListKey[index]).update({
+                status: true
+              }).then(() => {
+                let workStatus = { ...this.state.workStatus }
 
-          workStatus[index] = true
+                workStatus[index] = true
 
-          this.setState({
-            workStatus: workStatus,
-          })
-          if (this.state.workList.length > 0) {
-            const workList = this.state.workList.map((work, index) =>
-              <View key={index}>
-                <CheckBox
-                  title={work + '         ' + this.state.workDueDate[index]}
-                  iconType='material'
-                  checkedIcon='check-circle'
-                  uncheckedIcon='clear'
-                  checkedColor='green'
-                  uncheckedColor='red'
-                  containerStyle={{ height: 50, flex: 1 }}
-                  onLongPress={() => Alert.alert('Hello Task')}
-                  checked={this.state.workStatus[index]}
-                  onPress={() => this.setWorkStatus(index, false)}
-                />
-              </View>
-            );
+                this.setState({
+                  workStatus: workStatus,
+                })
+                if (this.state.workList.length > 0) {
+                  const workList = this.state.workList.map((work, index) =>
+                    <View key={index}>
+                      <CheckBox
+                        title={work + '         ' + this.state.workDueDate[index]}
+                        iconType='material'
+                        checkedIcon='check-circle'
+                        uncheckedIcon='clear'
+                        checkedColor='green'
+                        uncheckedColor='red'
+                        containerStyle={{ height: 50, flex: 1 }}
+                        onLongPress={() => [this.viewTaskDetail(
+                            this.state.workComment[index],
+                            this.state.workCourse[index],
+                            this.state.workDescriptions[index],
+                            this.state.workDueDate[index],
+                            this.state.workPriority[index],
+                            this.state.workPublishby[index],
+                            this.state.workStatus[index],
+                            this.state.workList[index],
+                            this.state.workListKey[index]
+                          ),
+                          this.setState({ viewTaskDetailModel: true})]
+                        }
+                        checked={this.state.workStatus[index]}
+                        onPress={() => this.setWorkStatus(index, false)}
+                      />
+                    </View>
+                  );
+                  this.setState({
+                    workListShow: workList
+                  })
+                }
+              })
+            }
+          }
+        ],
+        {
+          cancelable: true
+        }
+      )
+    } 
+  }
+
+  commentR = (comment) => {
+    const commentss = Object.keys(comment).map(key => {
+      return (
+        <View key={key} style={{width : 300, height: 50, flex: 1}}>
+          <Text>{comment[key].comment}</Text>
+          <Text>{comment[key].user}</Text>
+          <Text>------------------------------</Text>
+        </View>
+      )
+    })
+    return commentss
+  }
+
+  viewTaskDetail = (comment, course, descriptions, dueDate, priority, publishby, status, title, workKey) => {
+
+    const show = 
+      <View>
+        <View style={styles.viewTaskModalHead}>
+          <TouchableHighlight onPress={() => this.setState({ 
+            viewTaskDetailModel: false, 
+            newCommentPrompt: true, 
+            newCommentWorkKey:  workKey,
+            newCommentCourse: course
+            })} style={[styles.viewTaskHeadButton, { marginLeft: -15 }]} underlayColor='transparent'>
+            <Text style={{ color: 'orange' }}>Comment</Text>
+          </TouchableHighlight>
+          <Text style={styles.viewTaskText}>Task</Text>
+          <TouchableHighlight onPress={() => this.setState({ viewTaskDetailModel: false })} style={[styles.viewTaskHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
+            <Text style={{ color: 'orange' }}>OK</Text>
+          </TouchableHighlight>
+        </View>
+        <ScrollView>
+          <View style={{ height: 800}}>
+            <View style={styles.viewTaskTitleContainer}>
+              <Text style={styles.viewTaskTitleText}>{title}</Text>
+            </View>
+            <View style={{ borderBottomWidth: 2, borderBottomColor: 'rgba(200,200,200,0.6)', marginLeft: 20, marginRight: 20 }}></View>
+            <View style={styles.viewTaskDesContainer}>
+              <Text style={styles.viewTaskDescText}>{descriptions}</Text>
+            </View>
+            <View style={{ borderBottomWidth: 2, borderBottomColor: 'rgba(200,200,200,0.6)', marginLeft: 20, marginRight: 20 }}></View>
+            <View style={styles.viewTaskTitleContainer}>
+              <Text style={styles.viewTaskDetailText}>Course                              {course}</Text>
+            </View>
+            <View style={{ borderBottomWidth: 2, borderBottomColor: 'rgba(200,200,200,0.6)', marginLeft: 20, marginRight: 20 }}></View>
+            <View style={styles.viewTaskTitleContainer}>
+              <Text style={styles.viewTaskDetailText}>Due Date                          {dueDate}</Text>
+            </View>
+            <View style={{ borderBottomWidth: 2, borderBottomColor: 'rgba(200,200,200,0.6)', marginLeft: 20, marginRight: 20 }}></View>
+            <View style={[styles.taskPriority, {
+              backgroundColor: priority === 'NORMAL' ? 'green' : priority === 'MEDIUM' ? 'orange' : 'red'
+            }]} onPress={() => null}>
+              <Text style={{ color: 'white' }}>{priority}</Text>
+            </View>
+            <View style={{ borderBottomWidth: 2, borderBottomColor: 'rgba(200,200,200,0.6)', marginLeft: 20, marginRight: 20 }}></View>
+            <View style={styles.viewTaskDesContainer}>
+              <Text style={styles.viewTaskDescText}>{this.commentR(comment)}</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>;
+
+      this.setState({viewTaskDetail: show})
+  }
+
+  newComment = (comment) => {
+    Alert.alert(
+      `Comment to ${this.state.newCommentCourse}`,
+      'This will public to all member in course',
+      [
+        {
+          text: 'Cancel', onPress: () => null,
+          style: 'cancel'
+        },
+        {
+          text: 'OK', onPress: () => {
+            let user = firebase.auth().currentUser;
+            let pushKey = firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.newCommentWorkKey + '/comment').push().key;
+            let coursePushKey = firebase.database().ref('course/' + this.state.newCommentCourse + '/coursework/' + this.state.newCommentWorkKey + '/comment').push().key;
+            firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.newCommentWorkKey + '/comment/' + pushKey).set({
+              comment: comment,
+              user: user.displayName
+            })
+            firebase.database().ref('course/' + this.state.newCommentCourse + '/coursework/' + this.state.newCommentWorkKey + '/comment/' + coursePushKey).set({
+              comment: comment,
+              user: user.displayName
+            })
             this.setState({
-              workListShow: workList
+              newComment: '',
+              newCommentCourse: '',
+              newCommentPrompt: false,
+              viewTaskDetailModel: true,
+              newCommentWorkKey: ''
             })
           }
-
-          if (this.state.workCompletedList.length > 0) {
-            const workList = this.state.workCompletedList.map((work, index) =>
-              <View key={index}>
-                <CheckBox
-                  checked={this.state.workCompletedStatue[index]}
-                  title={work + '         ' + this.state.workCompletedDueDate[index]}
-                  iconType='material'
-                  checkedIcon='check-circle'
-                  uncheckedIcon='clear'
-                  checkedColor='green'
-                  uncheckedColor='red'
-                  containerStyle={{ height: 50 }}
-                  onLongPress={() => Alert.alert('Hello Task')}
-                  onPress={() => this.setWorkStatus(index, true)}
-                />
-              </View>
-            );
-            this.setState({
-              workCompletedListShow: workList
-            })
-          } 
-          console.log(this.state.workStatus[index])
-      })
-    } 
+        }
+      ]
+    )
   }
 
 
@@ -688,18 +817,19 @@ async _cacheResourcesAsync() {
 
     let dots = []
 
-    rootRef.child('users/' + user.uid + '/coursework').once('value', snap => {
+    rootRef.child('users/' + user.uid + '/coursework').on('value', snap => {
       if (snap.val() != null) {
         snap.forEach(snapchild => {
 
           let workKey = snapchild.key
           let title = snapchild.child('title').val();
-          let comment = snapchild.child('comment').val();
-          let descriptions = snapchild.child('descriptions').val();
           let duedate = snapchild.child('duedate').val();
           let priority = snapchild.child('priority').val();
-          let publishby = snapchild.child('publishby').val();
           let status = snapchild.child('status').val();
+          let descriptions = snapchild.child('descriptions').val();
+          let publishby = snapchild.child('publishby').val();
+          let comment = snapchild.child('comment').val();
+          let course = snapchild.child('course').val();
 
 
           let getDueDate = new Date(duedate);
@@ -710,16 +840,28 @@ async _cacheResourcesAsync() {
           if(!status){
             this.setState({
               workListKey: this.state.workListKey.concat([workKey]),
+              workComment: this.state.workComment.concat([comment]),
+              workCourse: this.state.workCourse.concat([course]),
+              workDescriptions: this.state.workDescriptions.concat([descriptions]),
               workDueDate: this.state.workDueDate.concat([getShowDueDate]),
+              workPriority: this.state.workPriority.concat([priority]),
+              workPublishby: this.state.workPublishby.concat([publishby]),
+              workStatus: this.state.workStatus.concat([status]),
               workList: this.state.workList.concat([title]),
-              workStatus: this.state.workStatus.concat([status])
             })
           }else{
             this.setState({
               workCompleteKey: this.state.workCompleteKey.concat([workKey]),
+              workCompletedComment: this.state.workCompletedComment.concat([comment]),
+              workCompletedCourse: this.state.workCompletedCourse.concat([course]),
+              workCompletedDescriptions: this.state.workCompletedDescriptions.concat([descriptions]),
               workCompletedDueDate: this.state.workCompletedDueDate.concat([getShowDueDate]),
+              workCompletedPriority: this.state.workCompletedPriority.concat([priority]),
+              workCompletedPublishby: this.state.workCompletedPublishby.concat([publishby]),
+              workCompletedStatus: this.state.workCompletedStatus.concat([status]),
               workCompletedList: this.state.workCompletedList.concat([title]),
-              workCompletedStatue: this.state.workCompletedStatue.concat([status])
+
+
             })
           }
 
@@ -734,9 +876,21 @@ async _cacheResourcesAsync() {
                   checkedColor='green'
                   uncheckedColor='red'
                   containerStyle={{ height: 50, flex: 1 }}
-                  onLongPress={() => Alert.alert('Hello Task')}
+                  onLongPress={() => [this.viewTaskDetail(
+                      this.state.workComment[index],
+                      this.state.workCourse[index],
+                      this.state.workDescriptions[index],
+                      this.state.workDueDate[index],
+                      this.state.workPriority[index],
+                      this.state.workPublishby[index],
+                      this.state.workStatus[index],
+                      this.state.workList[index],
+                      this.state.workListKey[index]
+                    ),
+                      this.setState({ viewTaskDetailModel: true })]
+                  }
                   checked={this.state.workStatus[index]}
-                  onPress={() => this.setWorkStatus(index, false)}
+                  onPress={() => this.setWorkStatus(index, false, this.state.workListKey[index])}
                 />
               </View>
             );
@@ -749,7 +903,7 @@ async _cacheResourcesAsync() {
             const workList = this.state.workCompletedList.map((work, index) =>
               <View key={index}>
                 <CheckBox
-                  checked={this.state.workCompletedStatue[index]}
+                  checked={this.state.workCompletedStatus[index]}
                   title={work + '         ' + this.state.workCompletedDueDate[index]}
                   iconType='material'
                   checkedIcon='check-circle'
@@ -757,8 +911,20 @@ async _cacheResourcesAsync() {
                   checkedColor='green'
                   uncheckedColor='red'
                   containerStyle={{ height: 50 }}
-                  onLongPress={() => Alert.alert('Hello Task')}
-                  onPress={() => this.setWorkStatus(index, true)}
+                  onLongPress={() => [this.viewTaskDetail(
+                      this.state.workCompletedComment[index],
+                      this.state.workCompletedCourse[index],
+                      this.state.workCompletedDescriptions[index],
+                      this.state.workCompletedDueDate[index],
+                      this.state.workCompletedPriority[index],
+                      this.state.workCompletedPublishby[index],
+                      this.state.workCompletedStatus[index],
+                      this.state.workCompletedList[index],
+                      this.state.workCompleteKey[index]
+                    ),
+                      this.setState({ viewTaskDetailModel: true })]
+                  }
+                  onPress={() => this.setWorkStatus(index, true, this.state.workCompleteKey[index])}
                 />
               </View>
             );
@@ -1123,6 +1289,30 @@ async _cacheResourcesAsync() {
             <View style={{ display: this.state.checktaskSelectStatus && this.state.completedSelectedStatus ? 'flex' : 'none' }}>
               {this.state.workCompletedListShow}
             </View>
+            <Modal
+              animationType='fade'
+              transparent={false}
+              visible={this.state.viewTaskDetailModel}
+              onRequestClose={() => this.setState({ viewTaskDetailModel: false })}
+            >
+              <View style={styles.viewTaskModalContainer}>
+                <View style={{ marginTop: 20 }}>
+                  {this.state.viewTaskDetail}
+                </View>
+              </View>
+            </Modal>
+
+            <Prompt
+              title="Comment"
+              placeholder='........'
+              promptStyle={{marginTop: 40}}
+              visible={this.state.newCommentPrompt}
+              textInputProps={{ autoCapitalize: 'sentences', width: null, height: 150, multiline: true }}
+              onCancel={() => this.setState({ newCommentPrompt: false, viewTaskDetailModel: true })}
+              onSubmit={(value) => this.newComment(value)}
+              submitText='Post'
+            />
+
 
             <View style={{display: this.state.noteSelectStatus? 'flex':'none'}}>
               <KeyboardAwareScrollView
