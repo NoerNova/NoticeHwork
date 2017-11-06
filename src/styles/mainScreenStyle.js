@@ -346,6 +346,17 @@ const styles = StyleSheet.create({
     height: 130,
     textAlignVertical: 'top',
   },
+  renderItemCalendarView: {
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    margin: 10
+  },
+  renderItemCalendarText: {
+    fontSize: 16,
+    marginLeft: 20,
+    padding: 10
+  },
 
 
 });

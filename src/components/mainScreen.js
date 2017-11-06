@@ -216,11 +216,12 @@ class MainScreen extends Component {
 
     let item = this.state.items[day.dateString]
 
-    if(item){
-      const show = Object.keys(item).map(key => 
-        <View key={key} style={[styles.item[key], { height: item[key].height }]}>
-          <Text>{item[key].name}</Text>
-          <Text>Hello</Text>
+    if (item) {
+      const show = Object.keys(item).map(key =>
+        <View key={key} style={styles.renderItemCalendarView}>
+          <TouchableHighlight onPress={() => Alert.alert('HelloWorld')}>
+            <Text style={styles.renderItemCalendarText}>{item[key].name}</Text>
+          </TouchableHighlight>
         </View>
       )
 
@@ -906,7 +907,8 @@ async _cacheResourcesAsync() {
           workCompletedPublishby: [],
           workCompletedStatus: [],
           workCompletedList: [],
-          dots: []
+          dots: [],
+          items: {}
         })
         
         snap.forEach(snapchild => {
@@ -962,12 +964,12 @@ async _cacheResourcesAsync() {
             if(!this.state.items[getMarkedDates]){
               this.state.items[getMarkedDates] = [];
               this.state.items[getMarkedDates].push({
-                name: title + '\n' + descriptions + '\n' + publishby,
+                name: title + '\n' + descriptions + '\n\nby...' + publishby,
                 height: Math.max(50, Math.floor(Math.random() * 150))
               })
             }else{
               this.state.items[getMarkedDates].push({
-                name: title + '\n' + descriptions + '\n' + publishby,
+                name: title + '\n' + descriptions + '\n\nby...' + publishby,
                 height: Math.max(50, Math.floor(Math.random() * 150))
               })
             }
