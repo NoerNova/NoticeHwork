@@ -16,11 +16,11 @@
   "dependencies": {
     "expo": "^22.0.0",
     "firebase": "^4.6.0",
-    "firebase-functions": "^0.7.1",
+    "firebase-functions": "^0.7.2",
     "prop-types": "^15.6.0",
     "react": "16.0.0-beta.5",
     "react-native": "https://github.com/expo/react-native/archive/sdk-21.0.0.tar.gz",
-    "react-native-calendars": "^1.9.0",
+    "react-native-calendars": "^1.9.2",
     "react-native-elements": "^0.17.0",
     "react-native-fcm": "^10.0.3",
     "react-native-fetch-blob": "^0.10.8",

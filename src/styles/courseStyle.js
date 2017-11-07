@@ -111,14 +111,15 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-    marginLeft: Platform.OS === 'ios'? 250:290,
+    marginLeft: Platform.OS === 'ios'? 200:290,
     marginRight: 5,
     marginTop: Platform.OS === 'ios'? -5:-10,
     backgroundColor: '#2196F3',
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 30
+    height: 30,
+    padding: 10
   },
 
   saveText: {
@@ -351,11 +352,15 @@ const styles = StyleSheet.create({
     marginLeft: 30
   },
   editLeaveButton: {
+    marginLeft: Platform.OS === 'ios' ? 20 : 30,
+    marginRight: 5,
+    marginTop: Platform.OS === 'ios' ? -5 : -10,
     backgroundColor: '#2196F3',
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 40,
+    height: 15,
+    padding: 10
   },
 
   headerContainer: {

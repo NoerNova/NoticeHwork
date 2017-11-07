@@ -2018,9 +2018,9 @@ find-up@^2.1.0:
   dependencies:
     locate-path "^2.0.0"
 
-firebase-functions@^0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-0.7.1.tgz#125b950f95769ce25a44b576b5cdaddc3246b4ca"
+firebase-functions@^0.7.2:
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-0.7.2.tgz#f65b71f308a6827a878e5e12aad4be086ebc8efb"
   dependencies:
     "@types/express" "^4.0.33"
     "@types/jsonwebtoken" "^7.1.32"
@@ -3988,9 +3988,9 @@ react-native-branch@2.0.0-beta.3:
   version "2.0.0-beta.3"
   resolved "https://registry.yarnpkg.com/react-native-branch/-/react-native-branch-2.0.0-beta.3.tgz#2167af86bbc9f964bd45bd5f37684e5b54965e32"
 
-react-native-calendars@^1.8.1:
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/react-native-calendars/-/react-native-calendars-1.8.1.tgz#1f3be1d611271e77bbecf7721508a60c2af850c6"
+react-native-calendars@^1.9.2:
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/react-native-calendars/-/react-native-calendars-1.9.2.tgz#283c2fdcda5c9c37e31f02f621f3b659bb574337"
   dependencies:
     prop-types "^15.5.10"
     xdate "^0.8.0"

@@ -19,7 +19,6 @@ import * as firebase from 'firebase';
 import { Actions } from 'react-native-router-flux';
 import firebaseConfig from './firebaseConfig.js';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import FCM from 'react-native-fcm';
 
 class Login extends Component {
 
@@ -34,7 +33,6 @@ class Login extends Component {
   }
 
   _onLoginSuccess = () => {
-    FCM.subscribeToTopic('/topics/list');
     Actions.course();
     this.setState({ loginLoading: true })
   }

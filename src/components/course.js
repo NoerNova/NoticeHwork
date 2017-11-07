@@ -11,7 +11,8 @@ import {
   ScrollView,
   TextInput,
   Modal,
-  Platform
+  Platform,
+  Keyboard
 } from 'react-native';
 
 import { AppLoading } from 'expo';
@@ -24,6 +25,7 @@ import * as firebase from 'firebase';
 import firebaseConfig from './firebaseConfig.js';
 
 import PushController from "./PushController";
+import Toast from 'react-native-simple-toast';
 
 
 
@@ -137,15 +139,22 @@ class Course extends Component {
     return(
       <View style={styles.viewCourseContainer}>
             <Image style={styles.courseViewTitle} source={require('../img/classRoom.jpg')}>
-                <View>
+                <View style={{marginTop: -10, marginBottom: 7}}>
                   <Text style={styles.courseNameView} numberOfLines={1}>{this.state.courseName}</Text>
                   <Text style={styles.courseCodeView} numberOfLines={1}>{this.state.courseCode}</Text>
                 </View>
-              <TouchableHighlight style={styles.saveButton} onPress={() => this.closeCourseView()} underlayColor='rgba(200,200,200,0.4)'>
-                <Text style={styles.saveText}>
-                  {'OK'}
-                </Text>
-              </TouchableHighlight>
+                <View style={{flexDirection: 'row'}}>
+                  <TouchableHighlight style={styles.editLeaveButton} onPress={() => this.leaveEditCourse()} underlayColor='rgba(200,200,200,0.4)'>
+                    <Text style={styles.saveText}>
+                      {this.state.adminState ? 'Edit' : 'Leave'}
+                    </Text>
+                  </TouchableHighlight>
+                  <TouchableHighlight style={styles.saveButton} onPress={() => this.closeCourseView()} underlayColor='rgba(200,200,200,0.4)'>
+                    <Text style={styles.saveText}>
+                      {'OK'}
+                    </Text>
+                  </TouchableHighlight>
+                </View>
             </Image>
 
           <ScrollView>
@@ -200,11 +209,6 @@ class Course extends Component {
               </View>
             </View>
           </ScrollView>
-            <TouchableHighlight style={styles.editLeaveButton} onPress={() => this.leaveEditCourse()} underlayColor='rgba(200,200,200,0.4)'>
-              <Text style={styles.saveText}>
-                {this.state.adminState ? 'Edit':'Leave'}
-              </Text>
-            </TouchableHighlight>
       </View>
     )
   }
@@ -355,32 +359,34 @@ class Course extends Component {
       return [sun, mon, thu, wed, the, fri, sat]
   }
 
-  joinCourse = () => {
-    const subjectsRef = firebase.database().ref('subjects');
-    const notificationReqsRef = firebase.database().ref('notificationRequests');
+  joinCourse = (searchCourse, author, authorUid) => {
+
+    const subjectsRef = firebase.database().ref('course/' + searchCourse);
+
     const subjectData = {
-      author: 'TJ',
-      title: 'Hello',
-    };
-    const notificationReq = { 
-      from_username: 'TJ',
-      message: `just posted new topic "${this.state.topicText}"`,
+      author: author,
+      authorUid: authorUid,
+      title: 'Follow user want to join ' + searchCourse + ' course',
     };
 
     const newSubjectKey = subjectsRef.push().key;
-    const newNotificationReqKey = notificationReqsRef.push().key;
 
     const updates = {};
-    updates[`/subjects/${newSubjectKey}`] = subjectData;
-    updates[`/notificationRequests/${newNotificationReqKey}`] = notificationReq;
-    firebase.database().ref().update(updates);
+    updates[`/joinrequest/${newSubjectKey}`] = subjectData;
+    firebase.database().ref('course/' + searchCourse).update(updates);
 
+    Toast.show('Sent requested');
+  }
 
+  deleteRequest = (requestId, searchCourse) => {
+    console.log(requestId + '->>' + searchCourse)
+    firebase.database().ref('course/' + searchCourse + '/joinrequest/' + requestId).remove().then(() => {
+      Toast.show('Request canceled');
+    })
   }
 
 searchCourse = () => {
   const user = firebase.auth().currentUser;
-  let courseAdmin = '';
   let searchCourse = this.state.searchCourseName;
   
   if(searchCourse.length < 5){
@@ -389,32 +395,54 @@ searchCourse = () => {
     if (this.state.courseCodeTask.indexOf(searchCourse) >= 0) {
       Alert.alert('Course Found', 'You already joined it');
     } else {
-      firebase.database().ref('course/' + searchCourse + '/courseMember').once('value').then((snapshot) =>{
-        snapshot.forEach(child => {
-          if (child.val() === 'Admin') {
-            courseAdmin = child.key;
-          }
-        })
-      });
 
       if (user != null) {
-        firebase.database().ref('course/' + this.state.searchCourseName).once('value').then((snapshot) => {
+        firebase.database().ref('course/' + searchCourse).once('value').then((snapshot) => {
           if (snapshot.val() !== null) {
-            Alert.alert(
-              'Course Found',
-              'Course with ' + searchCourse + ' CourseID was created by ' + courseAdmin,
-              [
+            
+            let requestStatus = snapshot.child('joinrequest');
+            let requestSent = false;
+            let requestId = '';
+
+            requestStatus.forEach(request => {
+              if(request.child('author').val() === user.displayName){
+                requestSent = true
+                requestId = request.key
+              }
+            })
+            
+            if(requestSent){
+              Alert.alert(
+                'Request already sent',
+                'Delete sent Request?',
+                [
+                  {
+                    text: 'Delete', onPress: () => this.deleteRequest(requestId, searchCourse),
+                  },
+                  {
+                    text: 'Cancel', onPress: () => null,
+                    style: 'cancel'
+                  }
+                ]
+              )
+            }else{
+              Alert.alert(
+                'Course Found',
+                'Course with ' + searchCourse + ' CourseID was created',
+                [
+                  {
+                    text: 'Cancel', onPress: () => null,
+                    style: 'cancel'
+                  },
+                  {
+                    text: 'Join', onPress: () => this.joinCourse(searchCourse, user.displayName, user.uid)
+                  },
+                ],
                 {
-                  text: 'Cancel', onPress: () => null,
-                  style: 'cancel'
-                },
-                {
-                  text: 'Join', onPress: () => this.joinCourse()
-                },
-              ],
-              {
-                cancelable: true
-              })
+                  cancelable: true
+                })
+            }
+            
           } else {
             Alert.alert(
               'Course NotFound',
@@ -585,7 +613,7 @@ closeCourseView = () => {
                 <TouchableHighlight style={styles.courseListContainer} onPress={() => this.courseView(courseList)}>
                   <View style={styles.courseNameCodeText}>
                     <Text style={styles.courseCodeText}>{courseList}</Text>
-                    <Text style={styles.courseNameText}>{this.state.courseNameTask[index]}</Text>
+                    <Text style={styles.courseNameText} numberOfLines={1}>{this.state.courseNameTask[index]}</Text>
                   </View>
                 </TouchableHighlight>
               </View>

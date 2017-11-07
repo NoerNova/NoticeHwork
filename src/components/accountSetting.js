@@ -155,12 +155,15 @@ class AccountSetting extends Component {
                 {
                     text: 'OK', onPress: () => {
                         this.setState({isReady: false})
-                        const userUid = firebase.auth().currentUser.uid;
-                        this.setState({userUid: userUid});
+                        const user = firebase.auth().currentUser;
+                        user.updateProfile({
+                            displayName: this.state.userName
+                        })
+                        this.setState({ userUid: user.uid});
                         if(this.state.uploadURL !== ''){
                             this.uploadImage(this.state.uploadURL);
                         }
-                        firebase.database().ref('users/' + this.state.userUid).update({
+                        firebase.database().ref('users/' + this.state.user).update({
                             email: this.state.email,
                             username: this.state.userName,
                             phone: this.state.phone,

@@ -358,6 +358,17 @@ const styles = StyleSheet.create({
     padding: 10
   },
 
+  requestNumStyle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'red',
+    width: 25,
+    height: 25,
+    borderRadius: 30,
+    borderColor: 'red',
+    marginTop: 10
+  }
+
 
 });
 

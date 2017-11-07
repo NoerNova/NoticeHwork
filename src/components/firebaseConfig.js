@@ -6,6 +6,7 @@ const firebaseConfig = {
   projectId: "noticehwork",
   storageBucket: "noticehwork.appspot.com",
   messagingSenderId: "383365177474",
+  persistence: true
 }
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);

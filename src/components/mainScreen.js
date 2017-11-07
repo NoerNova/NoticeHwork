@@ -26,6 +26,7 @@ import {Actions} from 'react-native-router-flux';
 
 import SegmentedControlTab from 'react-native-segmented-control-tab';
 
+import FCM from "react-native-fcm";
 import PushController from "./PushController";
 import { Card, Button, Icon, CheckBox } from 'react-native-elements';
 
@@ -138,6 +139,15 @@ class MainScreen extends Component {
       newComment: '',
       newCommentWorkKey: '',
       newCommentCourse: '',
+
+      requestModel: false,
+      requestNum: 0,
+      requestAuthor: [],
+      requestAuthorUid: [],
+      requestCourse: [],
+      requestStatus: [],
+      requestKey: [],
+      showRequest: null
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -769,7 +779,6 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
               newComment: '',
               newCommentCourse: '',
               newCommentPrompt: false,
-              viewTaskDetailModel: true,
               newCommentWorkKey: ''
             })
           }
@@ -778,6 +787,95 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
     )
   }
 
+  showLocalNotification() {
+
+    let now = new Date();
+    let time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 57, 0, 0) - now;
+    if (time < 0) {
+      time += 150000;
+    }
+    let text = '';
+    let testDate = new Date("Mon, Nov 7, 2017");
+    setTimeout(() => {
+      
+      if (this.state.workList.length > 0) {
+        this.state.workList.map((work, index) => {
+
+          let course = this.state.workCourse[index];
+          let title = this.state.workList[index];
+          let duedate = this.state.workDueDate[index]
+          let fullDueDate = new Date(duedate + ', 2017');
+          let leftTime = (fullDueDate - now)/1000/60/60;
+          let date = '';
+          console.log(leftTime + ' ->> ' + fullDueDate)
+
+          if((leftTime/24) > 1){
+            date = Math.floor(leftTime / 24) + ' day left'
+          }else{
+            date = Math.floor(leftTime) + ' Hour left'
+          }
+
+          text += course + '     ' + title + '     ' + date + '\n';
+        })
+      }
+
+          FCM.presentLocalNotification({
+            vibrate: 500,
+            click_action: "ACTION",
+            title: 'Great time to finish homework',
+            body: text,
+            big_text: 'HomeWork Time',
+            priority: "high",
+            sound: "bell.mp3",
+            large_icon: "https://image.freepik.com/free-icon/small-boy-cartoon_318-38077.jpg",
+            show_in_foreground: true,
+            number: 1
+          });
+
+    }, time);
+  }
+
+  scheduleLocalNotification() {
+    let now = new Date();
+    let time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+    let text = '';
+    if (this.state.workList.length > 0) {
+      this.state.workList.map((work, index) => {
+
+        let course = this.state.workCourse[index];
+        let title = this.state.workList[index];
+        let duedate = this.state.workDueDate[index]
+        let fullDueDate = new Date(duedate + ' ,'+ now.getFullYear());
+        let leftTime = (fullDueDate - now) / 1000 / 60 / 60;
+        let date = '';
+        console.log(leftTime + ' ->> ' + fullDueDate)
+
+        if ((leftTime / 24) > 1) {
+          date = Math.floor(leftTime / 24) + ' day left'
+        } else {
+          date = Math.floor(leftTime) + ' Hour left'
+        }
+
+        text += course + '     ' + title + '     ' + date + '\n';
+      })
+    }
+
+        FCM.scheduleLocalNotification({
+          id: 'testnotif',
+          fire_date: time,
+          vibrate: 1000,
+          title: 'You have work to do!',
+          body: text,
+          sub_text: 'sub text',
+          priority: "high",
+          sound: "bell.mp3",
+          large_icon: "https://image.freepik.com/free-icon/small-boy-cartoon_318-38077.jpg",
+          show_in_foreground: true,
+          picture: 'https://firebase.google.com/_static/af7ae4b3fc/images/firebase/lockup.png',
+          repeat_interval: "day"
+        })
+
+  }
 
 async _cacheResourcesAsync() {
   const user = firebase.auth().currentUser;
@@ -789,9 +887,12 @@ async _cacheResourcesAsync() {
         this.setState({
           courseNoteDate: [],
           courseNoteDetail: [],
-          courseNoteWriter: []
+          courseNoteWriter: [],
         })
         snap.forEach(child => {
+          const topic = `/topics/${child.key}`;
+          console.log(topic)
+          FCM.subscribeToTopic(topic);
           this.setState({
             courseCodeTask: this.state.courseCodeTask.concat([child.key]),
             courseNameTask: this.state.courseNameTask.concat([child.val()]),
@@ -818,6 +919,40 @@ async _cacheResourcesAsync() {
               isReady: true
             })
           }
+
+          rootRef.child('course/' + child.key + '/joinrequest').on('value', snap => {
+            snap.forEach((request) => {
+              if(request){
+                this.setState({
+                  requestAuthor: this.state.requestAuthor.concat([request.child('author').val()]),
+                  requestAuthorUid: this.state.requestAuthorUid.concat([request.child('authorUid').val()]),
+                  requestCourse: this.state.requestCourse.concat([child.key]),
+                  requestStatus: this.state.requestStatus.concat([false]),
+                  requestKey: this.state.requestKey.concat([request.key])
+                })
+              }
+            })
+
+                if(this.state.requestAuthor.length > 0){
+                  const showRequest = this.state.requestAuthor.map((author, index) => 
+                    <View key={index}>
+                      <CheckBox
+                        title={author + '         ' + this.state.requestCourse[index]}
+                        iconType='material'
+                        checkedIcon='check-box'
+                        uncheckedIcon='check-box-outline-blank'
+                        containerStyle={{ height: 50, flex: 1 }}
+                        checked={this.state.workStatus[index]}
+                        onPress={() => this.setRequestStatus(index, false, this.state.requestStatus[index])}
+                      />
+                    </View>
+                )
+                this.setState({
+                  showRequest: showRequest,
+                  requestNum: this.state.requestKey.lenght
+                })
+                }
+          })
           
 
           rootRef.child('course/' + child.key + '/note').on('value', snap => {
@@ -928,53 +1063,59 @@ async _cacheResourcesAsync() {
           let getMarkedDates = getDueDate.getFullYear() + '-' + ("0" + (getDueDate.getMonth() + 1)).slice(-2) + '-' + ("0" + (getDueDate.getDate())).slice(-2);
           let getShowDueDate = day[getDueDate.getDay()] + ', ' + monthLess[(getDueDate.getMonth())] + ' ' + getDueDate.getDate();
 
-          let markedDates = { ...this.state.markedDay }
-
-          if (markedDates[getMarkedDates] !== undefined) {
-            if (priority !== 'NORMAL') {
-              markedDates[getMarkedDates] = [{ textColor: 'white', startingDay: true, color: priority === 'HIGH' ? 'orange' : 'red' },
-              { textColor: 'white', endingDay: true, color: priority === 'HIGH' ? 'orange' : 'red' }];
-              this.setState({
-                markedDay: markedDates
-              })
-            }
-          } else {
-            markedDates[getMarkedDates] = [{ textColor: 'white', startingDay: true, color: priority === 'NORMAL' ? 'green' : priority === 'HIGH' ? 'orange' : 'red' },
-            { textColor: 'white', endingDay: true, color: priority === 'NORMAL' ? 'green' : priority === 'HIGH' ? 'orange' : 'red' }];
-            this.setState({
-
-              markedDay: markedDates
-            })
-          }
-          
+          let markedDates = { ...this.state.markedDay }        
 
           if(!status){
-            this.setState({
-              workListKey: this.state.workListKey.concat([workKey]),
-              workComment: this.state.workComment.concat([comment]),
-              workCourse: this.state.workCourse.concat([course]),
-              workDescriptions: this.state.workDescriptions.concat([descriptions]),
-              workDueDate: this.state.workDueDate.concat([getShowDueDate]),
-              workPriority: this.state.workPriority.concat([priority]),
-              workPublishby: this.state.workPublishby.concat([publishby]),
-              workStatus: this.state.workStatus.concat([status]),
-              workList: this.state.workList.concat([title]),
-            })
+            let nowDate = new Date();
+            let checkDueDate = getDueDate - nowDate
 
-            if(!this.state.items[getMarkedDates]){
-              this.state.items[getMarkedDates] = [];
-              this.state.items[getMarkedDates].push({
-                name: title + '\n' + descriptions + '\n\nby...' + publishby,
-                height: Math.max(50, Math.floor(Math.random() * 150))
+            if (checkDueDate > 0){
+              this.setState({
+                workListKey: this.state.workListKey.concat([workKey]),
+                workComment: this.state.workComment.concat([comment]),
+                workCourse: this.state.workCourse.concat([course]),
+                workDescriptions: this.state.workDescriptions.concat([descriptions]),
+                workDueDate: this.state.workDueDate.concat([getShowDueDate]),
+                workPriority: this.state.workPriority.concat([priority]),
+                workPublishby: this.state.workPublishby.concat([publishby]),
+                workStatus: this.state.workStatus.concat([status]),
+                workList: this.state.workList.concat([title]),
               })
+
+              if (!this.state.items[getMarkedDates]) {
+                this.state.items[getMarkedDates] = [];
+                this.state.items[getMarkedDates].push({
+                  name: title + '\n' + descriptions + '\n\nby...' + publishby,
+                  height: Math.max(50, Math.floor(Math.random() * 150))
+                })
+              } else {
+                this.state.items[getMarkedDates].push({
+                  name: title + '\n' + descriptions + '\n\nby...' + publishby,
+                  height: Math.max(50, Math.floor(Math.random() * 150))
+                })
+              }
+
+              if (markedDates[getMarkedDates] !== undefined) {
+                if (priority !== 'NORMAL') {
+                  markedDates[getMarkedDates] = [{ textColor: 'white', startingDay: true, color: priority === 'MEDIUM' ? 'orange' : 'red' },
+                  { textColor: 'white', endingDay: true, color: priority === 'MEDIUM' ? 'orange' : 'red' }];
+                  this.setState({
+                    markedDay: markedDates
+                  })
+                }
+              } else {
+                markedDates[getMarkedDates] = [{ textColor: 'white', startingDay: true, color: priority === 'NORMAL' ? 'green' : priority === 'MEDIUM' ? 'orange' : 'red' },
+                { textColor: 'white', endingDay: true, color: priority === 'NORMAL' ? 'green' : priority === 'MEDIUM' ? 'orange' : 'red' }];
+                this.setState({
+
+                  markedDay: markedDates
+                })
+              }
             }else{
-              this.state.items[getMarkedDates].push({
-                name: title + '\n' + descriptions + '\n\nby...' + publishby,
-                height: Math.max(50, Math.floor(Math.random() * 150))
-              })
+              firebase.database().ref('users/' + user.uid + '/coursework/' + workKey).update({
+                status: true
+              });
             }
-
-
 
           }else{
             this.setState({
@@ -991,6 +1132,7 @@ async _cacheResourcesAsync() {
           }
 
           if (this.state.workList.length > 0) {
+            this.scheduleLocalNotification();
             const workList = this.state.workList.map((work, index) =>
               <View key={index}>
                 <CheckBox
@@ -1078,41 +1220,45 @@ async _cacheResourcesAsync() {
         })
       
 
-        if (this.state.privateNoteDate.length > 0) {
+        if (this.state.privateNoteDetail.length > 0) {
+          console.log('this1')
           this.setState({
             privateNoteDate: this.state.privateNoteDate.reverse(),
             privateNoteDetail: this.state.privateNoteDetail.reverse()
           })
-          const privateNoteDisplay = this.state.privateNoteDate.map((note, index) =>
-            <View key={index}>
-              <Swipeout right={[{
-                text: 'Delete',
-                backgroundColor: 'red',
-                onPress: function () { Alert.alert('Delete?') },
-                autoClose: true
-              }]}
-                style={{ marginTop: 10 }}
-              >
-                <TouchableHighlight onPress={() => {
-                  [
-                    this.viewNoteDetail("", note,this.state.privateNoteDetail[index],""),
-                    this.setState({noteDetailModel: true})
-                  ]}}
-                  underlayColor="rgba(200,200,200,0.3)"
+          const privateNoteDisplay = this.state.privateNoteDetail.map((note, index) =>
+              <View key={index}>
+                <Swipeout right={[{
+                  text: 'Delete',
+                  backgroundColor: 'red',
+                  onPress: function () { Alert.alert('Delete?') },
+                  autoClose: true
+                }]}
+                  style={{ marginTop: 10 }}
                 >
-                  <View style={{ height: 80, marginTop: 10 }}>
-                    <Text style={styles.noteDetail} numberOfLines={1}>{this.state.privateNoteDetail[index]}</Text>
-                    <Text style={styles.noteDate}>{note}</Text>
-                  </View>
-                </TouchableHighlight>
-              </Swipeout>
-            </View>
+                  <TouchableHighlight onPress={() => {
+                    [
+                      this.viewNoteDetail("", this.state.privateNoteDate[index], note, ""),
+                      this.setState({ noteDetailModel: true })
+                    ]
+                  }}
+                    underlayColor="rgba(200,200,200,0.3)"
+                  >
+                    <View style={{ height: 80, marginTop: 10 }}>
+                      <Text style={styles.noteDetail} numberOfLines={1}>{note}</Text>
+                      <Text style={styles.noteDate}>{this.state.privateNoteDate[index]}</Text>
+                    </View>
+                  </TouchableHighlight>
+                </Swipeout>
+              </View>          
           );
 
           this.setState({
             privateNoteDisplay: privateNoteDisplay,
             isReady: true
           })
+        }else{
+          console.log('this2')
         }
       })
     })
@@ -1406,6 +1552,30 @@ async _cacheResourcesAsync() {
               </View>
             </Modal>
 
+            <Modal
+              animationType='fade'
+              transparent={false}
+              visible={this.state.requestModel}
+              onRequestClose={() => this.setState({ requestModel: false })}
+            >
+              <View>
+                <View style={styles.viewTaskModalHead}>
+                  <TouchableHighlight onPress={() => this.setState({ requestModel: false})} style={[styles.viewTaskHeadButton, { marginLeft: -15 }]} underlayColor='transparent'>
+                    <Text style={{ color: 'orange' }}>back</Text>
+                  </TouchableHighlight>
+                  <Text style={styles.viewTaskText}>Request</Text>
+                  <TouchableHighlight onPress={() => this.setState({ viewTaskDetailModel: false })} style={[styles.viewTaskHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
+                    <Text style={{ color: 'orange' }}>Done</Text>
+                  </TouchableHighlight>
+                </View>
+                <ScrollView>
+                  <View style={{ height: 800 }}>
+                    {this.state.showRequest}
+                  </View>
+                </ScrollView>
+              </View>
+            </Modal>
+
             <Prompt
               title="Comment"
               placeholder='........'
@@ -1558,7 +1728,20 @@ async _cacheResourcesAsync() {
                 </TouchableHighlight>
                 <TouchableHighlight
                   style={styles.settingList}
-                  onPress={() => Alert.alert('Chart')}
+                  onPress={() => this.setState({ settingModal: false, requestModel: true }) }
+                  underlayColor="rgba(200,200,200,0.6)"
+                >
+                  <View style={{ flexDirection: 'row' }}>
+                    <Image source={require('../img/icon/join.png')} style={styles.settingListIcon}></Image>
+                    <Text style={styles.settingListText}>Request</Text>
+                    <View style={[styles.requestNumStyle, { display: this.state.requestNum > 0 ? 'flex' : 'none' }]}>
+                        <Text style={{color: 'white'}}>{this.state.requestNum}</Text>
+                    </View>
+                  </View>
+                </TouchableHighlight>
+                <TouchableHighlight
+                  style={styles.settingList}
+                    onPress={() => this.showLocalNotification()}
                   underlayColor="rgba(200,200,200,0.6)"
                 >
                   <View style={{flexDirection: 'row'}}>

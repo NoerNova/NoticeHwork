@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 import FCM, { FCMEvent, RemoteNotificationResult, WillPresentNotificationResult, NotificationType } from "react-native-fcm";
 
