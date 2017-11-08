@@ -192,7 +192,6 @@ class MainScreen extends Component {
           markedDayIndex: ""
         })
 
-        console.log("Have Index Not Null")
       } else {
         markedDates[day.dateString] = [{ textColor: 'white', startingDay: true, color: '#00adf5' }, { textColor: 'white', endingDay: true, color: '#00adf5' }];
         this.setState({
@@ -200,7 +199,6 @@ class MainScreen extends Component {
           markedDayIndex: day.dateString
         })
 
-        console.log("Have Index")
       }
 
 
@@ -212,15 +210,12 @@ class MainScreen extends Component {
           markedDayIndex: ""
         })
 
-        console.log("Not Null")
       } else {
         markedDates[day.dateString] = [{ textColor: 'white', startingDay: true, color: '#00adf5' }, { textColor: 'white', endingDay: true, color: '#00adf5' }];
         this.setState({
           markedDay: markedDates,
           markedDayIndex: day.dateString
         })
-
-        console.log("Null Set Index")
       }
     }
 
@@ -238,7 +233,6 @@ class MainScreen extends Component {
       this.setState({
         renderItemCalendar: show
       })
-      console.log(item)
     }
   }
 
@@ -633,13 +627,6 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
               firebase.database().ref('users/' + user.uid + '/coursework/' + this.state.workListKey[index]).update({
                 status: true
               }).then(() => {
-                let workStatus = { ...this.state.workStatus }
-
-                workStatus[index] = true
-
-                this.setState({
-                  workStatus: workStatus,
-                })
                 if (this.state.workList.length > 0) {
                   const workList = this.state.workList.map((work, index) =>
                     <View key={index}>
@@ -807,7 +794,6 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
           let fullDueDate = new Date(duedate + ', 2017');
           let leftTime = (fullDueDate - now)/1000/60/60;
           let date = '';
-          console.log(leftTime + ' ->> ' + fullDueDate)
 
           if((leftTime/24) > 1){
             date = Math.floor(leftTime / 24) + ' day left'
@@ -848,7 +834,6 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
         let fullDueDate = new Date(duedate + ' ,'+ now.getFullYear());
         let leftTime = (fullDueDate - now) / 1000 / 60 / 60;
         let date = '';
-        console.log(leftTime + ' ->> ' + fullDueDate)
 
         if ((leftTime / 24) > 1) {
           date = Math.floor(leftTime / 24) + ' day left'
@@ -877,6 +862,32 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
 
   }
 
+  setRequestState = (index) => {
+    let requestStatus = this.state.requestStatus
+    requestStatus[index] = this.state.requestStatus[index] === true ? false : true
+    this.setState({ requestStatus: requestStatus })
+
+    if (this.state.requestAuthor.length > 0) {
+      const showRequest = this.state.requestAuthor.map((author, index) =>
+        <View key={index}>
+          <CheckBox
+            title={author + '         ' + this.state.requestCourse[index]}
+            iconType='material'
+            checkedIcon='check-box'
+            checkedColor='green'
+            uncheckedIcon='check-box-outline-blank'
+            containerStyle={{ height: 50 }}
+            checked={this.state.requestStatus[index] === true ? true : false}
+            onPress={() => this.setRequestState(index)}
+          />
+        </View>
+      )
+      this.setState({
+        showRequest: showRequest,
+      })
+    }
+  }
+
 async _cacheResourcesAsync() {
   const user = firebase.auth().currentUser;
 
@@ -891,7 +902,6 @@ async _cacheResourcesAsync() {
         })
         snap.forEach(child => {
           const topic = `/topics/${child.key}`;
-          console.log(topic)
           FCM.subscribeToTopic(topic);
           this.setState({
             courseCodeTask: this.state.courseCodeTask.concat([child.key]),
@@ -913,11 +923,7 @@ async _cacheResourcesAsync() {
               course: courseList
             })
           }else{
-            console.log('someTHine went wrong')
-
-            this.setState({
-              isReady: true
-            })
+            return;
           }
 
           rootRef.child('course/' + child.key + '/joinrequest').on('value', snap => {
@@ -940,16 +946,18 @@ async _cacheResourcesAsync() {
                         title={author + '         ' + this.state.requestCourse[index]}
                         iconType='material'
                         checkedIcon='check-box'
+                        checkedColor='green'
                         uncheckedIcon='check-box-outline-blank'
-                        containerStyle={{ height: 50, flex: 1 }}
-                        checked={this.state.workStatus[index]}
-                        onPress={() => this.setRequestStatus(index, false, this.state.requestStatus[index])}
+                        containerStyle={{ height: 50 }}
+                        checked={this.state.requestStatus[index] === true? true:false}
+                        onPress={() => this.setRequestState(index)}
                       />
                     </View>
                 )
                 this.setState({
                   showRequest: showRequest,
-                  requestNum: this.state.requestKey.lenght
+                  requestNum: this.state.requestAuthor.length,
+                  isReady: true
                 })
                 }
           })
@@ -1006,16 +1014,12 @@ async _cacheResourcesAsync() {
                   isReady: true
                 })
               }else{
-                this.setState({
-                  isReady: true
-                })
+                return;
               }
           })
         })
       } else {
-        this.setState({
-          isReady: true
-        })
+        return;
       }
     })
 
@@ -1162,7 +1166,8 @@ async _cacheResourcesAsync() {
               </View>
             );
             this.setState({
-              workListShow: workList
+              workListShow: workList,
+              isReady: true
             })
           }
 
@@ -1196,15 +1201,13 @@ async _cacheResourcesAsync() {
               </View>
             );
             this.setState({
-              workCompletedListShow: workList
+              workCompletedListShow: workList,
+              isReady: true
             })
           } 
         })
       } else {
-        console.log('NULL')
-        this.setState({
-          isReady: true
-        })
+        return;
       }
     })
 
@@ -1221,7 +1224,6 @@ async _cacheResourcesAsync() {
       
 
         if (this.state.privateNoteDetail.length > 0) {
-          console.log('this1')
           this.setState({
             privateNoteDate: this.state.privateNoteDate.reverse(),
             privateNoteDetail: this.state.privateNoteDetail.reverse()
@@ -1258,7 +1260,7 @@ async _cacheResourcesAsync() {
             isReady: true
           })
         }else{
-          console.log('this2')
+          return;
         }
       })
     })
@@ -1558,13 +1560,13 @@ async _cacheResourcesAsync() {
               visible={this.state.requestModel}
               onRequestClose={() => this.setState({ requestModel: false })}
             >
-              <View>
-                <View style={styles.viewTaskModalHead}>
-                  <TouchableHighlight onPress={() => this.setState({ requestModel: false})} style={[styles.viewTaskHeadButton, { marginLeft: -15 }]} underlayColor='transparent'>
-                    <Text style={{ color: 'orange' }}>back</Text>
+              <View style={styles.requestModelContainer}>
+                <View style={styles.requestModalHead}>
+                  <TouchableHighlight onPress={() => this.setState({ requestModel: false})} style={[styles.requestHeadButton, { marginLeft: 0 }]} underlayColor='transparent'>
+                    <Text style={{ color: 'orange' }}>Back</Text>
                   </TouchableHighlight>
-                  <Text style={styles.viewTaskText}>Request</Text>
-                  <TouchableHighlight onPress={() => this.setState({ viewTaskDetailModel: false })} style={[styles.viewTaskHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
+                  <Text style={styles.requestText}>Request</Text>
+                  <TouchableHighlight onPress={() => this.setState({ viewTaskDetailModel: false })} style={[styles.requestHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
                     <Text style={{ color: 'orange' }}>Done</Text>
                   </TouchableHighlight>
                 </View>

@@ -367,7 +367,31 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderColor: 'red',
     marginTop: 10
-  }
+  },
+  requestModelContainer: {
+    flex: 1,
+    height: null,
+    width: null,
+    backgroundColor: 'white',
+    marginTop: Platform.OS === 'ios' ? 10 : 0
+  },
+  requestModalHead: {
+    paddingTop: Platform.OS === 'ios' ? 10 : 20,
+    paddingBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  requestText: {
+    marginLeft: Platform.OS === 'ios' ? 75 : 85,
+    marginRight: Platform.OS === 'ios' ? 45 : 0,
+    fontSize: 18,
+    fontWeight: 'bold'
+  },
+  requestHeadButton: {
+    padding: 10,
+  },
 
 
 });
