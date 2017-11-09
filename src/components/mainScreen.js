@@ -35,6 +35,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Swipeout from 'react-native-swipeout';
 import Prompt from 'react-native-prompt';
 import PieChart from 'react-native-pie-chart';
+import Toast from 'react-native-simple-toast';
 
 var date = new Date();
 var month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -78,6 +79,7 @@ class MainScreen extends Component {
       courseNoteDate: [],
       courseNoteDetail: [],
       courseNoteWriter: [],
+      courseNoteKey: [],
       privateNoteDisplay: null,
       privateNoteDate: [],
       privateNoteDetail: [],
@@ -150,7 +152,9 @@ class MainScreen extends Component {
       requestKey: [],
       aceptable: false,
       showRequest: null,
-      chartModel: false
+      chartModel: false,
+      Aseries: 0,
+      Bseries: 0
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -911,11 +915,24 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
         firebase.database().ref('course/' + course + '/courseDetail').once('value', snapCourse => {
           firebase.database().ref('users/' + authorUid + '/courseList/' + course).set(snapCourse.child('courseName').val())
         })
+        firebase.database().ref('course/' + course + '/coursework').once('value', snapWork => {
+          snapWork.forEach(work => {
+            firebase.database().ref('users/' + authorUid + '/coursework/' + work.key).set({
+              course: work.child('course').val(),
+              descriptions: work.child('descriptions').val(),
+              duedate: work.child('duedate').val(),
+              priority: work.child('priority').val(),
+              publishby: work.child('publishby').val(),
+              status: false,
+              title: work.child('status').val()
+            })
+          })
+        })
         firebase.database().ref('course/' + course + '/courseMember').once('value', snapMember => {
           snapMember.forEach(member => {
             firebase.database().ref('users/' + member.key + '/friendsList/' + authorUid).set(author)
             firebase.database().ref('users/' + member.key).once('value', snapUser => {
-              if(snapUser.key !== authorUid){
+              if(member.key !== authorUid){
                 firebase.database().ref('users/' + authorUid + '/friendsList/' + member.key).set(snapUser.child('username').val())
               }
             })
@@ -927,6 +944,27 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
         
       }
     })
+  }
+
+  deleteCourseNote = (key, course) => {
+    Alert.alert(
+      'Delete note from ' + course,
+      'this note will not available for all user',
+      [
+        {
+          text: 'Cancel', onPress: () => null,
+          style: 'cancel'
+        },
+        {
+          text: 'Delete', onPress: () => {
+            firebase.database().ref('course/' + course + '/note/' + key).remove().then(() => {
+              Toast.show('Deleted')
+            })
+          }
+        }
+      ]
+
+    )
   }
 
 async _cacheResourcesAsync() {
@@ -1010,6 +1048,7 @@ async _cacheResourcesAsync() {
                 courseNoteDate: this.state.courseNoteDate.concat([snapNote.child('date').val()]),
                 courseNoteDetail: this.state.courseNoteDetail.concat([snapNote.child('note').val()]),
                 courseNoteWriter: this.state.courseNoteWriter.concat([snapNote.child('writer').val()]),
+                courseNoteKey: this.state.courseNoteKey.concat([snapNote.key])
               })
             })
 
@@ -1017,14 +1056,15 @@ async _cacheResourcesAsync() {
                 this.setState({
                   courseNoteDate : this.state.courseNoteDate.reverse(),
                   courseNoteDetail : this.state.courseNoteDetail.reverse(),
-                  courseNoteWriter : this.state.courseNoteWriter.reverse()
+                  courseNoteWriter : this.state.courseNoteWriter.reverse(),
+                  courseNoteKey : this.state.courseNoteKey.reverse()
                 })
                 const courseNoteDisplay = this.state.courseNoteDate.map((note, index) => 
                   <View key={index}>
                     <Swipeout right={[{
                       text: 'Delete',
                       backgroundColor: 'red',
-                      onPress: function () { Alert.alert('Delete?') },
+                      onPress:  () => { this.deleteCourseNote(this.state.courseNoteKey[index], child.key) },
                       autoClose: true
                     }]}
                       style={{ marginTop: 10 }}
@@ -1060,7 +1100,7 @@ async _cacheResourcesAsync() {
           })
         })
       } else {
-        return;
+        this.setState({isReady: true})
       }
     })
 
@@ -1178,8 +1218,8 @@ async _cacheResourcesAsync() {
 
           let workL = this.state.workList.length;
           let cWork = this.state.workCompletedList.length;
-          let Aseries = (workL/(workL+cWork)) * 100;
-          let Bseries = (cWork / (workL + cWork)) * 100;
+          let Aseries = Math.round((workL/(workL+cWork)) * 100);
+          let Bseries = Math.round((cWork / (workL + cWork)) * 100);
           this.setState({
             Aseries: Aseries,
             Bseries: Bseries
@@ -1257,7 +1297,7 @@ async _cacheResourcesAsync() {
           } 
         })
       } else {
-        return;
+        this.setState({isReady: true})
       }
     })
 
@@ -1310,7 +1350,7 @@ async _cacheResourcesAsync() {
             isReady: true
           })
         }else{
-          return;
+          this.setState({isReady: true})
         }
       })
     })
@@ -1401,6 +1441,8 @@ async _cacheResourcesAsync() {
               friendsDisplay: friendslist,
               isReady: true
             })
+          }else{
+            this.setState({ isReady: true })
           }
         })
       })
