@@ -12,6 +12,9 @@ import java.util.List;
 import com.imagepicker.ImagePickerPackage;
 import com.RNFetchBlob.RNFetchBlobPackage;
 import com.evollu.react.fcm.FIRMessagingPackage;
+import com.imagepicker.ImagePickerPackage;
+import com.RNFetchBlob.RNFetchBlobPackage;
+import com.evollu.react.fcm.FIRMessagingPackage;
 
 public class MainApplication extends MultiDexApplication {
 
@@ -23,6 +26,9 @@ public class MainApplication extends MultiDexApplication {
 
         // Needed for `react-native link`
         // new MainReactPackage(),
+            new ImagePickerPackage(),
+            new RNFetchBlobPackage(),
+            new FIRMessagingPackage(),
             new ImagePickerPackage(),
             new RNFetchBlobPackage(),
             new FIRMessagingPackage()

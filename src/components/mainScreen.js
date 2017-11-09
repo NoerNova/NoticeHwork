@@ -34,6 +34,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 import Swipeout from 'react-native-swipeout';
 import Prompt from 'react-native-prompt';
+import PieChart from 'react-native-pie-chart';
 
 var date = new Date();
 var month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -147,7 +148,9 @@ class MainScreen extends Component {
       requestCourse: [],
       requestStatus: [],
       requestKey: [],
-      showRequest: null
+      aceptable: false,
+      showRequest: null,
+      chartModel: false
     };
      this.onDayPress = this.onDayPress.bind(this);
   }
@@ -885,7 +888,45 @@ showFriendDetail = (friendsPicture, friendsName, friendsEmail, friendsFacebook, 
       this.setState({
         showRequest: showRequest,
       })
+      if (this.state.requestStatus.includes(true)){
+        this.setState({
+          aceptable: true
+        })
+      }else{
+        this.setState({
+          aceptable: false
+        })
+      }
     }
+  }
+
+  acceptRequest = () => {
+    this.state.requestAuthor.map((author, index) => {
+      if(this.state.requestStatus[index]){
+        let course = this.state.requestCourse[index];
+        let authorUid = this.state.requestAuthorUid[index];
+        let author = this.state.requestAuthor[index];
+        let key = this.state.requestKey[index];
+        firebase.database().ref('course/' + course + '/courseMember/' + authorUid).set("Member")
+        firebase.database().ref('course/' + course + '/courseDetail').once('value', snapCourse => {
+          firebase.database().ref('users/' + authorUid + '/courseList/' + course).set(snapCourse.child('courseName').val())
+        })
+        firebase.database().ref('course/' + course + '/courseMember').once('value', snapMember => {
+          snapMember.forEach(member => {
+            firebase.database().ref('users/' + member.key + '/friendsList/' + authorUid).set(author)
+            firebase.database().ref('users/' + member.key).once('value', snapUser => {
+              if(snapUser.key !== authorUid){
+                firebase.database().ref('users/' + authorUid + '/friendsList/' + member.key).set(snapUser.child('username').val())
+              }
+            })
+          })
+        }).then(() => {
+          firebase.database().ref('course/' + course + '/joinrequest/' + key).remove();
+          this.setState({requestModel: false})
+        })
+        
+      }
+    })
   }
 
 async _cacheResourcesAsync() {
@@ -1134,6 +1175,15 @@ async _cacheResourcesAsync() {
               workCompletedList: this.state.workCompletedList.concat([title]),
             })
           }
+
+          let workL = this.state.workList.length;
+          let cWork = this.state.workCompletedList.length;
+          let Aseries = (workL/(workL+cWork)) * 100;
+          let Bseries = (cWork / (workL + cWork)) * 100;
+          this.setState({
+            Aseries: Aseries,
+            Bseries: Bseries
+          })
 
           if (this.state.workList.length > 0) {
             this.scheduleLocalNotification();
@@ -1566,9 +1616,16 @@ async _cacheResourcesAsync() {
                     <Text style={{ color: 'orange' }}>Back</Text>
                   </TouchableHighlight>
                   <Text style={styles.requestText}>Request</Text>
-                  <TouchableHighlight onPress={() => this.setState({ viewTaskDetailModel: false })} style={[styles.requestHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
-                    <Text style={{ color: 'orange' }}>Done</Text>
-                  </TouchableHighlight>
+                  <View style={{display: this.state.aceptable? 'none':'flex'}}>
+                    <TouchableHighlight onPress={() => this.setState({ requestModel: false })} style={[styles.requestHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
+                      <Text style={{ color: 'orange' }}>Done</Text>
+                    </TouchableHighlight>
+                  </View>
+                  <View style={{display: this.state.aceptable? 'flex':'none'}}>
+                    <TouchableHighlight onPress={() => this.acceptRequest()} style={[styles.requestHeadButton, { marginLeft: 20 }]} underlayColor='transparent'>
+                      <Text style={{ color: 'orange' }}>accept</Text>
+                    </TouchableHighlight>
+                  </View>
                 </View>
                 <ScrollView>
                   <View style={{ height: 800 }}>
@@ -1743,7 +1800,7 @@ async _cacheResourcesAsync() {
                 </TouchableHighlight>
                 <TouchableHighlight
                   style={styles.settingList}
-                    onPress={() => this.showLocalNotification()}
+                    onPress={() => this.setState({chartModel: true})}
                   underlayColor="rgba(200,200,200,0.6)"
                 >
                   <View style={{flexDirection: 'row'}}>
@@ -1751,6 +1808,43 @@ async _cacheResourcesAsync() {
                     <Text style={styles.settingListText}>Chart</Text>
                   </View>
                 </TouchableHighlight>
+
+                <Modal
+                  animationType='fade'
+                  transparent={false}
+                  visible={this.state.chartModel}
+                  onRequestClose={() => this.setState({ chartModel: false})}
+                >
+                  <View style={styles.requestModelContainer}>
+                    <View style={styles.requestModalHead}>
+                      <Text style={[styles.requestText, {marginRight: 20,marginLeft: 120}]}>Chart</Text>
+                      <TouchableHighlight onPress={() => this.setState({ chartModel: false})} style={[styles.requestHeadButton, { marginLeft: 60 }]} underlayColor='transparent'>
+                        <Text style={{ color: 'orange' }}>OK</Text>
+                      </TouchableHighlight>
+                    </View>
+                    <ScrollView style={{ flex: 1 }}>
+                      <View style={styles.chartContainer}>
+                        <PieChart
+                          chart_wh={250}
+                          series={[this.state.Bseries, this.state.Aseries]}
+                          sliceColor={['green', 'red']}
+                          doughnut={true}
+                          coverRadius={0.45}
+                          coverFill={'#FFF'}
+                        />
+                        <View style={{flexDirection: 'row',paddingRight: 10, marginTop: 20}}>
+                          <View style={[styles.chartSignDetail, {borderColor: 'red'}]}></View>
+                          <Text style={styles.chartTitle}>{this.state.Aseries}%    Inprogress Work</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', paddingRight: 10, marginTop: 10}}>
+                          <View style={[styles.chartSignDetail,{ borderColor: 'green' }]}></View>
+                          <Text style={styles.chartTitle}>{this.state.Bseries}%    Complete Work</Text>
+                        </View>
+                      </View>
+                    </ScrollView>
+                  </View>
+                </Modal>
+
                 <TouchableHighlight
                   style={styles.settingList}
                   onPress={() => {Actions.course(); this.setState({settingModal: false})}}

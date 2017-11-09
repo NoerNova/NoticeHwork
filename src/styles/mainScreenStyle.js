@@ -393,6 +393,21 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 
+  chartContainer: {
+    flex: 1,
+    alignItems: 'center'
+  },
+  chartTitle: {
+    fontSize: 18,
+    margin: 10
+  },
+  chartSignDetail: {
+    width: 20, 
+    height: 20, 
+    borderWidth: 10,
+    marginTop: 10
+  }
+
 
 });
 

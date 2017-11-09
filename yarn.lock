@@ -4072,6 +4072,10 @@ react-native-picker-android@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/react-native-picker-android/-/react-native-picker-android-1.0.3.tgz#1607843bce510d35a28522511994d3cfced344dd"
 
+react-native-pie-chart@^1.0.12:
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/react-native-pie-chart/-/react-native-pie-chart-1.0.12.tgz#0d99e9cb4cb3a4503c20a9111d499d84a99b4276"
+
 react-native-prompt@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/react-native-prompt/-/react-native-prompt-1.0.0.tgz#41e0ec2aa7dd8f12f3a3ee83af9d63c4b670f8a1"
